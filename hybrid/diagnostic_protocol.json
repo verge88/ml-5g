@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "purpose": "Post-hoc mechanism diagnosis, not retuning or replacement of the original benchmark",
+  "new_simulator_seeds": [61, 62, 63, 64, 65],
+  "original_code_revision": "060ba514cc3c75b0a027b30b26315a98221229cf",
+  "nominal_calibration_fpr": 0.01,
+  "arms": ["max_residual", "if_context", "hgb_original", "hgb_behavior_labels", "hgb_sequence_exposure", "hgb_behavior_labels_and_exposure", "hgb_deeper"],
+  "interventions": {
+    "behavior_labels": "Relabel integrity-only training episodes as behavior-normal; raw telemetry and all test labels remain unchanged",
+    "sequence_exposure": "Replace one of two fanout episodes per training run with a sequence episode; number of positive labels unchanged",
+    "deeper": "Original training labels and data, max_depth 6 and 300 boosting iterations instead of depth 3 and 100 iterations"
+  },
+  "external_diagnostics": [
+    "Check whether new_pair is constant in the normal fit data and whether IsolationForest ever splits on it",
+    "Measure attacks on new versus previously seen directed IP pairs",
+    "Measure overlap of static packet signatures with normal packets",
+    "Measure score saturation when only a constant fit feature is changed"
+  ],
+  "interpretation": "Exposure to sequence attacks is an explanatory intervention; its performance is not zero-day detection. No positive effect is required for CI success. Original protocol and experiment source files must remain byte-identical."
+}
+

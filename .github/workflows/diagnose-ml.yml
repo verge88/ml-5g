@@ -1,0 +1,41 @@
+name: Diagnose why complex models do not win
+
+on:
+  push:
+    branches: [codex/hybrid-ml-diagnosis]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  OMP_NUM_THREADS: '1'
+  OPENBLAS_NUM_THREADS: '1'
+  MKL_NUM_THREADS: '1'
+  PYTHONHASHSEED: '0'
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - run: python -m pytest -q tests/test_diagnostics.py --junitxml=results/diagnosis-tests.xml
+      - run: python -m hybrid.fetch_data
+      - run: python -m hybrid.diagnose
+      - run: cp hybrid/diagnostic_protocol.json results/diagnosis/diagnostic_protocol.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: model-gap-diagnosis
+          path: |
+            results/diagnosis/
+            results/diagnosis-tests.xml
+          if-no-files-found: error
