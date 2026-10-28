@@ -1,0 +1,292 @@
+{
+  "version": 1,
+  "policy_id": "stage39-independent-full-profile-policy-v2",
+  "slots": {
+    "amf1": {
+      "nf_type": "AMF",
+      "endpoint": "127.0.1.20",
+      "fqdn": "amf1.core.example.test",
+      "services": [
+        {
+          "serviceName": "namf-comm",
+          "scheme": "https",
+          "status": "REGISTERED",
+          "versions": [
+            "v1"
+          ],
+          "endpoints": [
+            {
+              "ip": "127.0.1.20",
+              "port": 443,
+              "transport": "TCP"
+            }
+          ]
+        }
+      ]
+    },
+    "ausf1": {
+      "nf_type": "AUSF",
+      "endpoint": "127.0.1.14",
+      "fqdn": "ausf1.core.example.test",
+      "services": [
+        {
+          "serviceName": "nausf-auth",
+          "scheme": "https",
+          "status": "REGISTERED",
+          "versions": [
+            "v1"
+          ],
+          "endpoints": [
+            {
+              "ip": "127.0.1.14",
+              "port": 443,
+              "transport": "TCP"
+            }
+          ]
+        }
+      ]
+    },
+    "ausf2": {
+      "nf_type": "AUSF",
+      "endpoint": "127.0.1.15",
+      "fqdn": "ausf2.core.example.test",
+      "services": [
+        {
+          "serviceName": "nausf-auth",
+          "scheme": "https",
+          "status": "REGISTERED",
+          "versions": [
+            "v1"
+          ],
+          "endpoints": [
+            {
+              "ip": "127.0.1.15",
+              "port": 443,
+              "transport": "TCP"
+            }
+          ]
+        }
+      ]
+    },
+    "bsf1": {
+      "nf_type": "BSF",
+      "endpoint": "127.0.1.16",
+      "fqdn": "bsf1.core.example.test",
+      "services": [
+        {
+          "serviceName": "nbsf-management",
+          "scheme": "https",
+          "status": "REGISTERED",
+          "versions": [
+            "v1"
+          ],
+          "endpoints": [
+            {
+              "ip": "127.0.1.16",
+              "port": 443,
+              "transport": "TCP"
+            }
+          ]
+        }
+      ]
+    },
+    "bsf2": {
+      "nf_type": "BSF",
+      "endpoint": "127.0.1.17",
+      "fqdn": "bsf2.core.example.test",
+      "services": [
+        {
+          "serviceName": "nbsf-management",
+          "scheme": "https",
+          "status": "REGISTERED",
+          "versions": [
+            "v1"
+          ],
+          "endpoints": [
+            {
+              "ip": "127.0.1.17",
+              "port": 443,
+              "transport": "TCP"
+            }
+          ]
+        }
+      ]
+    },
+    "nrf1": {
+      "nf_type": "NRF",
+      "endpoint": "127.0.1.10",
+      "fqdn": "nrf1.core.example.test",
+      "services": [
+        {
+          "serviceName": "nnrf-disc",
+          "scheme": "https",
+          "status": "REGISTERED",
+          "versions": [
+            "v1"
+          ],
+          "endpoints": [
+            {
+              "ip": "127.0.1.10",
+              "port": 443,
+              "transport": "TCP"
+            }
+          ]
+        }
+      ]
+    },
+    "nssf1": {
+      "nf_type": "NSSF",
+      "endpoint": "127.0.1.12",
+      "fqdn": "nssf1.core.example.test",
+      "services": [
+        {
+          "serviceName": "nnssf-nsselection",
+          "scheme": "https",
+          "status": "REGISTERED",
+          "versions": [
+            "v2"
+          ],
+          "endpoints": [
+            {
+              "ip": "127.0.1.12",
+              "port": 443,
+              "transport": "TCP"
+            }
+          ]
+        }
+      ]
+    },
+    "nssf2": {
+      "nf_type": "NSSF",
+      "endpoint": "127.0.1.13",
+      "fqdn": "nssf2.core.example.test",
+      "services": [
+        {
+          "serviceName": "nnssf-nsselection",
+          "scheme": "https",
+          "status": "REGISTERED",
+          "versions": [
+            "v2"
+          ],
+          "endpoints": [
+            {
+              "ip": "127.0.1.13",
+              "port": 443,
+              "transport": "TCP"
+            }
+          ]
+        }
+      ]
+    },
+    "pcf1": {
+      "nf_type": "PCF",
+      "endpoint": "127.0.1.22",
+      "fqdn": "pcf1.core.example.test",
+      "services": [
+        {
+          "serviceName": "npcf-am-policy-control",
+          "scheme": "https",
+          "status": "REGISTERED",
+          "versions": [
+            "v1"
+          ],
+          "endpoints": [
+            {
+              "ip": "127.0.1.22",
+              "port": 443,
+              "transport": "TCP"
+            }
+          ]
+        }
+      ]
+    },
+    "scp1": {
+      "nf_type": "SCP",
+      "endpoint": "127.0.1.11",
+      "fqdn": "scp1.core.example.test",
+      "services": [
+        {
+          "serviceName": "scp-routing",
+          "scheme": "https",
+          "status": "REGISTERED",
+          "versions": [
+            "v1"
+          ],
+          "endpoints": [
+            {
+              "ip": "127.0.1.11",
+              "port": 443,
+              "transport": "TCP"
+            }
+          ]
+        }
+      ]
+    },
+    "smf1": {
+      "nf_type": "SMF",
+      "endpoint": "127.0.1.21",
+      "fqdn": "smf1.core.example.test",
+      "services": [
+        {
+          "serviceName": "nsmf-pdusession",
+          "scheme": "https",
+          "status": "REGISTERED",
+          "versions": [
+            "v1"
+          ],
+          "endpoints": [
+            {
+              "ip": "127.0.1.21",
+              "port": 443,
+              "transport": "TCP"
+            }
+          ]
+        }
+      ]
+    },
+    "udm1": {
+      "nf_type": "UDM",
+      "endpoint": "127.0.1.18",
+      "fqdn": "udm1.core.example.test",
+      "services": [
+        {
+          "serviceName": "nudm-sdm",
+          "scheme": "https",
+          "status": "REGISTERED",
+          "versions": [
+            "v2"
+          ],
+          "endpoints": [
+            {
+              "ip": "127.0.1.18",
+              "port": 443,
+              "transport": "TCP"
+            }
+          ]
+        }
+      ]
+    },
+    "udm2": {
+      "nf_type": "UDM",
+      "endpoint": "127.0.1.19",
+      "fqdn": "udm2.core.example.test",
+      "services": [
+        {
+          "serviceName": "nudm-sdm",
+          "scheme": "https",
+          "status": "REGISTERED",
+          "versions": [
+            "v2"
+          ],
+          "endpoints": [
+            {
+              "ip": "127.0.1.19",
+              "port": 443,
+              "transport": "TCP"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

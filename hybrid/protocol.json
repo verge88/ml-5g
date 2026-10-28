@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "scope": "Controlled simulator of observables plus separate external Open5GS trace benchmark; not a live 5G validation",
+  "test_seeds": [41,42,43,44,45,46,47,48,49,50],
+  "development_seed": 1,
+  "ticks": 192,
+  "train_normal_runs": 10,
+  "train_attack_runs": 10,
+  "calibration_normal_runs": 8,
+  "test_runs": 20,
+  "target_calibration_point_fpr": 0.01,
+  "event_length_ticks": 16,
+  "heldout_attack": "sequence",
+  "negative_observability_control": "stealth",
+  "models": ["max_residual","ewma","cusum","if_raw","if_context","hgb_raw","hgb_context"],
+  "if_trees": 100,
+  "hgb_iterations": 100,
+  "scheduler_checks_per_tick": 2,
+  "scheduler_mandatory_max_gap": 13,
+  "scheduler_risk_lag_ticks": 1,
+  "primary_comparisons": [
+    "integrity versus integrity OR behavioral ML on observable profile-valid attacks at separately reported test FPR",
+    "raw versus context-residual models during authorized restarts",
+    "uniform versus oldest-first versus ML extra checks with equal acquisition credits and mandatory coverage"
+  ],
+  "ci_success_means": "Execution, artifact validity and invariants; never a required positive scientific result",
+  "vendor": {
+    "repository": "verge88/ml-5g",
+    "ref": "de3a8d7e2d4c48934f437f862fabeadc0fab3d9a",
+    "research/stage39_kie.py": "050eb43dbb4a4fb0eecaa5b81ef65ab130c8dc28",
+    "stage39/full_profile_policy.json": "31050e12660afa933d422497debeab7e5ca693f3"
+  },
+  "external_dataset": {
+    "repository": "TF0x42/granomaly",
+    "ref": "51df94b4e88d1c9c5e499416e4b8fee5c9b93cd7",
+    "files": {
+      "bridge_normal.csv": "4afcd4be9e63806f48f73e0aa83d7c891345f0fe",
+      "bridge_attack_nrf.csv": "b59cd2fcfe86cb6fda809d495480691a0c8f394f",
+      "bridge_attack_smf.csv": "d5a03e69344c8b224753576afb1ab3ee218a779b"
+    }
+  }
+}
+
