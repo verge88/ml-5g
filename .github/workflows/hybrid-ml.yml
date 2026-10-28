@@ -1,0 +1,112 @@
+name: Integrity and ML experimental validation
+
+on:
+  push:
+    branches: [codex/hybrid-ml-actions]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  OMP_NUM_THREADS: '1'
+  OPENBLAS_NUM_THREADS: '1'
+  MKL_NUM_THREADS: '1'
+  PYTHONHASHSEED: '0'
+
+jobs:
+  invariants:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - run: python -m pytest -q --junitxml=results/tests.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: invariant-tests
+          path: results/tests.xml
+          if-no-files-found: error
+
+  simulation:
+    needs: invariants
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - batch: a
+            seeds: '41 42 43 44 45'
+          - batch: b
+            seeds: '46 47 48 49 50'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - run: python -m hybrid.benchmark --seeds ${{ matrix.seeds }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: simulation-${{ matrix.batch }}
+          path: results/simulation/
+          if-no-files-found: error
+
+  external:
+    needs: invariants
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - run: python -m hybrid.fetch_data
+      - run: python -m hybrid.external
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: external-traces
+          path: results/external/
+          if-no-files-found: error
+
+  report:
+    needs: [simulation, external]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - run: python -m hybrid.aggregate --input artifacts --output results/final
+      - run: cp hybrid/protocol.json results/final/protocol.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: final-experimental-report
+          path: results/final/
+          if-no-files-found: error
