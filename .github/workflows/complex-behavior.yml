@@ -1,0 +1,90 @@
+name: Complex NF behavior and sequence benchmark
+
+on:
+  push:
+    branches: [codex/complex-behavior-benchmark]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  OMP_NUM_THREADS: '1'
+  OPENBLAS_NUM_THREADS: '1'
+  MKL_NUM_THREADS: '1'
+  PYTHONHASHSEED: '0'
+
+jobs:
+  controls:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - run: python -m pytest -q tests/test_complex.py tests/test_diagnostics.py --junitxml=results/complex-tests.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: complex-controls
+          path: results/complex-tests.xml
+          if-no-files-found: error
+
+  experiment:
+    needs: controls
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - batch: a
+            seeds: '101 102 103 104 105'
+          - batch: b
+            seeds: '106 107 108 109 110'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - run: python -m complex5g.benchmark --seeds ${{ matrix.seeds }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: complex-${{ matrix.batch }}
+          path: results/complex/
+          if-no-files-found: error
+
+  report:
+    needs: experiment
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - run: python -m complex5g.aggregate --input artifacts --output results/complex-final
+      - run: cp complex5g/protocol.json results/complex-final/protocol.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: complex-behavior-report
+          path: results/complex-final/
+          if-no-files-found: error
