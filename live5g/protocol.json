@@ -1,0 +1,19 @@
+{
+  "version": "native-open5gs-integration-v1",
+  "open5gs_commit": "d9d3abdd480be96fac3bc8a997e83446648763ca",
+  "replicas": [201, 202, 203],
+  "period_seconds": 0.5,
+  "request_timeout_seconds": 0.4,
+  "fit_ticks": 100,
+  "calibration_ticks": 100,
+  "normal_test_ticks": 100,
+  "baseline_ticks": 12,
+  "fault_ticks": 12,
+  "recovery_ticks": 16,
+  "training_faults": [["ausf", "stop"], ["nssf", "stop"]],
+  "test_faults": [["ausf", "stop"], ["nssf", "stop"], ["ausf", "pause"], ["nssf", "pause"]],
+  "nominal_normal_point_fpr": 0.01,
+  "label_scope": "controlled availability faults, not security attack detection",
+  "calibration": "normal only, strict score greater than empirical 99th percentile",
+  "evaluation_unit": "per NF observation; episode detected only inside active fault interval"
+}

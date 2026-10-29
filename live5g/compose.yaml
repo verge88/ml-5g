@@ -1,0 +1,24 @@
+services:
+  nrf:
+    image: ghcr.io/borjis131/nrf:v2.7.6
+    command: ["-c", "/etc/open5gs/lab/nrf.yaml"]
+    volumes: ["./nrf.yaml:/etc/open5gs/lab/nrf.yaml:ro"]
+    ports: ["127.0.0.1:7777:80"]
+    networks: [sbi]
+  ausf:
+    image: ghcr.io/borjis131/ausf:v2.7.6
+    command: ["-c", "/etc/open5gs/lab/ausf.yaml"]
+    volumes: ["./ausf.yaml:/etc/open5gs/lab/ausf.yaml:ro"]
+    ports: ["127.0.0.1:7778:80"]
+    depends_on: [nrf]
+    networks: [sbi]
+  nssf:
+    image: ghcr.io/borjis131/nssf:v2.7.6
+    command: ["-c", "/etc/open5gs/lab/nssf.yaml"]
+    volumes: ["./nssf.yaml:/etc/open5gs/lab/nssf.yaml:ro"]
+    ports: ["127.0.0.1:7779:80"]
+    depends_on: [nrf]
+    networks: [sbi]
+networks:
+  sbi:
+    driver: bridge

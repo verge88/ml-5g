@@ -1,0 +1,186 @@
+name: Native Open5GS registration and live monitoring
+
+on:
+  push:
+    branches: [codex/native-open5gs-validation]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  OMP_NUM_THREADS: '1'
+  OPENBLAS_NUM_THREADS: '1'
+  MKL_NUM_THREADS: '1'
+  PYTHONHASHSEED: '0'
+
+jobs:
+  controls:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: python -m pip install -r requirements.txt h2==4.2.0
+      - run: python -m pytest -q tests/test_live5g.py --junitxml=results/live-controls.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-controls
+          path: results/live-controls.xml
+
+  native-registration:
+    needs: controls
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    services:
+      mongodb:
+        image: mongo:7
+        ports: ['27017:27017']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install official core build dependencies and packet observer
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends meson ninja-build build-essential flex bison cmake git pkg-config python3-setuptools python3-wheel libsctp-dev libc-ares-dev libgnutls28-dev libgcrypt-dev libssl-dev libidn-dev libmongoc-dev libbson-dev libyaml-dev libnghttp2-dev libmicrohttpd-dev libcurl4-gnutls-dev libtins-dev libtalloc-dev tcpdump tshark
+      - name: Build fixed unmodified official source
+        run: |
+          git clone --branch v2.7.6 --depth 1 https://github.com/open5gs/open5gs.git native-src
+          test "$(git -C native-src rev-parse HEAD)" = d9d3abdd480be96fac3bc8a997e83446648763ca
+          meson setup native-src/build native-src
+          ninja -C native-src/build -j 2
+      - name: Enable local TUN for official registration procedures
+        run: |
+          sudo ip tuntap add name ogstun mode tun
+          sudo ip addr add 10.45.0.1/16 dev ogstun
+          sudo ip addr add 2001:db8:cafe::1/48 dev ogstun
+          sudo ip link set ogstun up
+      - name: Run original registration suite with native packet and process evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p native-evidence
+          git -C native-src rev-parse HEAD > native-evidence/open5gs-commit.txt
+          git -C native-src status --porcelain > native-evidence/source-status.txt
+          dpkg-query -W > native-evidence/system-packages.txt
+          docker image inspect mongo:7 > native-evidence/mongo-image.json
+          sudo tcpdump -i lo -U -w "$PWD/native-evidence/registration.pcap" 'tcp port 7777 or sctp or udp port 8805 or udp port 2152' > native-evidence/tcpdump.log 2>&1 &
+          capture_pid=$!
+          (
+            while true; do
+              date -u +%FT%T.%N
+              ps -eo pid,comm,args | awk '/open5gs-[a-z]+d/ && !/awk/ {print}'
+              sleep 0.2
+            done
+          ) > native-evidence/processes.log &
+          observer_pid=$!
+          cleanup() { kill "$observer_pid" 2>/dev/null || true; sudo kill -INT "$capture_pid" 2>/dev/null || true; wait "$capture_pid" 2>/dev/null || true; }
+          trap cleanup EXIT
+          cd native-src
+          timeout 300 ./build/tests/registration/registration 2>&1 | tee ../native-evidence/registration.log
+          test -z "$(git status --porcelain --untracked-files=no)"
+          cd ..
+          cleanup
+          trap - EXIT
+          tshark -r native-evidence/registration.pcap -d tcp.port==7777,http2 -T fields -e _ws.col.Protocol 2>/dev/null | sort | uniq -c > native-evidence/protocol-counts.txt
+          cat native-evidence/protocol-counts.txt
+          test -s native-evidence/registration.pcap
+          grep -E 'All tests passed|SUCCESS|Passed' native-evidence/registration.log > native-evidence/suite-outcome.txt
+          sha256sum native-evidence/* > native-evidence-sha256.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-registration
+          path: |
+            native-evidence/
+            native-evidence-sha256.txt
+          if-no-files-found: warn
+          retention-days: 30
+
+  live-monitor:
+    needs: controls
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        replica: [201, 202, 203]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: python -m pip install -r requirements.txt h2==4.2.0 pyyaml==6.0.2
+      - name: Resolve and lock native NF images before launch
+        run: |
+          mkdir -p results/live-${{ matrix.replica }}
+          docker compose -p ml5g-live -f live5g/compose.yaml pull
+          python - <<'PY'
+          import json, pathlib, subprocess, yaml
+          path = pathlib.Path('live5g/compose.yaml')
+          obj = yaml.safe_load(path.read_text())
+          images = {}
+          for service in obj['services'].values():
+              source = service['image']
+              details = json.loads(subprocess.check_output(['docker', 'image', 'inspect', source]))[0]
+              digest = details['RepoDigests'][0]
+              images[source] = {'locked': digest, 'id': details['Id'], 'created': details['Created']}
+              service['image'] = digest
+          path.with_name('compose.lock.yaml').write_text(yaml.safe_dump(obj, sort_keys=False))
+          pathlib.Path('results/live-${{ matrix.replica }}/images.json').write_text(json.dumps(images, indent=2))
+          PY
+      - name: Start unmodified native NRF AUSF NSSF
+        run: docker compose -p ml5g-live -f live5g/compose.lock.yaml up -d
+      - name: Collect actual HTTP2 during controlled local lifecycle faults
+        run: python -m live5g.capture --replica ${{ matrix.replica }} --output results/live-${{ matrix.replica }}
+      - name: Fit calibrate and test on chronological live observations
+        run: python -m live5g.evaluate --input results/live-${{ matrix.replica }}
+      - name: Save native diagnostics
+        if: always()
+        run: |
+          mkdir -p results/live-${{ matrix.replica }}
+          docker compose -p ml5g-live -f live5g/compose.lock.yaml ps -a > results/live-${{ matrix.replica }}/compose-ps.txt || true
+          docker compose -p ml5g-live -f live5g/compose.lock.yaml logs --no-color > results/live-${{ matrix.replica }}/native-nf.log 2>&1 || true
+          cp live5g/protocol.json results/live-${{ matrix.replica }}/protocol.json
+          python -m pip freeze > results/live-${{ matrix.replica }}/packages.txt
+      - name: Remove local test deployment
+        if: always()
+        run: docker compose -p ml5g-live -f live5g/compose.lock.yaml down --remove-orphans || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: live-monitor-${{ matrix.replica }}
+          path: results/live-${{ matrix.replica }}/
+          retention-days: 30
+
+  report:
+    needs: [native-registration, live-monitor]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: live-monitor-*
+          path: artifacts
+      - run: python -m live5g.aggregate --input artifacts --output results/live-final
+      - run: cat results/live-final/REPORT.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: native-live-report
+          path: results/live-final/
