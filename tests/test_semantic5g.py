@@ -1,7 +1,7 @@
 import csv
 import json
 import pytest
-from semantic5g.analyze import candidate, family, native_experiment, read_csv, signatures, template
+from semantic5g.analyze import candidate, family, native_experiment, normal_training_rows, read_csv, signatures, template
 
 
 def test_template_removes_info_delimiter_and_subscriber():
@@ -68,3 +68,11 @@ def test_empty_decode_cannot_silently_pass(tmp_path):
     saved = tmp_path/'empty.json'; saved.write_text('[]')
     with pytest.raises(ValueError, match='Empty HTTP/2'):
         native_experiment(saved,tmp_path/'missing.pcap',tmp_path)
+
+
+def test_training_boundary_uses_rows_when_frame_numbers_repeat(tmp_path):
+    path=tmp_path/'normal.csv'
+    with path.open('w',newline='') as f:
+        w=csv.writer(f);w.writerow(['frame.time_epoch','frame.number'])
+        w.writerows([[i,1] for i in range(10)])
+    assert normal_training_rows(path)==set(range(6))

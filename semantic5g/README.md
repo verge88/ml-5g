@@ -12,7 +12,7 @@ The analysis unit is an observed request hop, not a unique UE, independent attac
 
 ## Detectors
 
-All operation banks use the same first 60% of the normal capture's packets as the frozen ML training. The rules never read attack labels while producing alerts. Subscriber IDs, UUIDs, numeric resource identifiers, opaque hex IDs, and the Wireshark frame delimiter are normalized. Query arguments and payload semantics remain outside this CSV policy's observability.
+All operation banks use the same first 60% of the normal capture's packets as the frozen ML training. Original CSV row identity, rather than reused frame numbers in the concatenated normal recording, selects this temporal boundary. The rules never read attack labels while producing alerts. Subscriber IDs, UUIDs, numeric resource identifiers, opaque hex IDs, and the Wireshark frame delimiter are normalized. Query arguments and payload semantics remain outside this CSV policy's observability.
 
 1. Edge novelty: unfamiliar `(source IP, destination IP)`.
 2. Edge-operation novelty: unfamiliar `(source IP, destination IP, HTTP method, API resource template)`.
@@ -41,7 +41,7 @@ TS 29.509 permits HTTP 200 with `authResult=AUTHENTICATION_FAILURE`; therefore H
 
 ## Reproduction
 
-The workflow `.github/workflows/passive-semantic.yml` downloads only pinned recordings/frozen scores, runs seven parser/correlation controls, decodes the saved PCAP, evaluates policies, and uploads redacted request tables and summaries. SBI port 7777 is explicitly decoded as HTTP/2 because heuristic detection differs across Wireshark versions; empty decoding is an error. It requires neither a running 5G core nor attack code.
+The workflow `.github/workflows/passive-semantic.yml` downloads only pinned recordings/frozen scores, runs eight parser/correlation controls, decodes the saved PCAP, evaluates policies, and uploads redacted request tables and summaries. SBI port 7777 is explicitly decoded as HTTP/2 because heuristic detection differs across Wireshark versions; empty decoding is an error. It requires neither a running 5G core nor attack code.
 
 Sources:
 

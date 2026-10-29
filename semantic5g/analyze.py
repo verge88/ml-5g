@@ -67,7 +67,7 @@ def read_csv(path):
     generation = Counter()
     skipped = 0
     with Path(path).open(encoding="utf-8-sig", newline="") as f:
-        for row in csv.DictReader(f):
+        for packet_row, row in enumerate(csv.DictReader(f)):
             info = row["_ws.col.info"]
             client = (row["ip.src"], row["srcport"], row["ip.dst"], row["dstport"])
             if "[SYN]" in info:
@@ -77,7 +77,7 @@ def read_csv(path):
                 continue
             for stream, method, uri in REQUEST.findall(info):
                 key = (*client, generation[client], stream)
-                requests.append(dict(frame=int(row["frame.number"]),
+                requests.append(dict(packet_row=packet_row, frame=int(row["frame.number"]),
                     time=float(row["frame.time_epoch"]), source=client[0], destination=client[2],
                     method=method, path=template(uri), label=row["Label"], key=key))
             reverse = (client[2], client[3], client[0], client[1])
@@ -103,21 +103,26 @@ def rate(n, d):
     return n / d if d else None
 
 
+def normal_training_rows(path):
+    with Path(path).open(encoding="utf-8-sig", newline="") as f:
+        packets = sorted(enumerate(csv.DictReader(f)), key=lambda item: float(item[1]["frame.time_epoch"]))
+    # The concatenated normal dataset reuses frame numbers; row identity is required.
+    return {index for index, row in packets[:int(.6 * len(packets))]}
+
+
 def csv_experiment(data, out):
     manifest = json.loads((data / "manifest.json").read_text(encoding="utf-8-sig"))
     for item in manifest:
         if digest(data / item["name"]) != item["sha256"]:
             raise ValueError("Source digest mismatch: " + item["name"])
     normal_all, _ = read_csv(data / "bridge_normal.csv")
-    with (data / "bridge_normal.csv").open(encoding="utf-8-sig", newline="") as f:
-        normal_packets = sorted(csv.DictReader(f), key=lambda r: float(r["frame.time_epoch"]))
-    training_frames = {int(r["frame.number"]) for r in normal_packets[:int(.6 * len(normal_packets))]}
-    normal = [r for r in normal_all if r["frame"] in training_frames]
+    training_rows = normal_training_rows(data / "bridge_normal.csv")
+    normal = [r for r in normal_all if r["packet_row"] in training_rows]
     banks = [set(x[i] for x in map(signatures, normal)) for i in range(3)]
     results = {"source_revision": REVISION, "source_files": manifest,
         "design": "retrospective exploratory; fixed normal capture only for profiling; no attack execution",
         "normal_training_requests": len(normal), "normal_signature_counts": [len(b) for b in banks],
-        "normal_training_packets": len(training_frames), "normal_total_requests": len(normal_all),
+        "normal_training_packets": len(training_rows), "normal_total_requests": len(normal_all),
         "limitations": ["No request bodies, tokens, peer certificates, or trusted caller roles in CSV",
             "An IP can aggregate multiple NF callers; inventory is not an identity oracle",
             "SCP forwarding hides original caller; no authenticated origin is inferred",
@@ -160,7 +165,7 @@ def csv_experiment(data, out):
         results["captures"][name] = dict(requests=len(requests), retransmission_rows_skipped=skipped,
             paired_responses=sum(r["status"] is not None for r in requests), metrics=metrics,
             by_label_operation=[dict(label=k[0], family=k[1], **v) for k, v in sorted(counts.items())])
-        fields = ["frame", "time", "source", "destination", "method", "path", "label", "status", "response_correlation",
+        fields = ["packet_row", "frame", "time", "source", "destination", "method", "path", "label", "status", "response_correlation",
             "family", *methods, "caller_identity", "authorization_outcome", "proxied_hop"]
         with (out / (name.removesuffix(".csv") + "-requests.csv")).open("w", encoding="utf-8", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=fields)
