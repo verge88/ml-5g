@@ -64,7 +64,7 @@ jobs:
           set -euo pipefail
           python -m cu5g.authority --control cu-control --key cu-private/lifecycle.key > cu-out/authority.log 2>&1 &
           authority_pid=$!
-          trap 'touch cu-control/done; kill "$authority_pid" 2>/dev/null || true' EXIT
+          trap 'kill "$authority_pid" 2>/dev/null || true' EXIT
           docker run -d --name cu-core --network host --add-host nrf:127.0.0.1 --add-host ausf:127.0.0.1 --add-host nssf:127.0.0.1 \
             -e REPLICA=${{ matrix.replica }} -e SOURCE_COMMIT=${{ github.sha }} \
             -v "$PWD/cu-out:/out" -v "$PWD/cu-control:/control" -v "$PWD/cu-runtime:/runtime" \
@@ -78,7 +78,6 @@ jobs:
           test "$core_status" -eq 0
           witness_status="$(docker wait cu-witness)"
           test "$witness_status" -eq 0
-          touch cu-control/done
           wait "$authority_pid"
           trap - EXIT
       - name: Save public diagnostics
