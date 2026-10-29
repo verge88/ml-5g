@@ -1,0 +1,19 @@
+{
+  "run_id": 40902826197,
+  "code_commit": "681f8d234aa0cc0e9b88c7ed55866dadf4f8e92d",
+  "files": {
+    "registration/native-evidence/registration.pcap": "b63937910385848bc1cea139d7f51f5e8bcfdbc19a54d709494f841f9c544af8",
+    "external/bridge_attack_nrf-predictions.csv": "343e9499dee128d4e587a8f486a043fdbf65da2b438929bf352e25021c8a4176",
+    "external/bridge_attack_smf-predictions.csv": "1fe65ab08b61937e66e905fdfc8deac80d99dc6d3f1cc88071a3d41a14c22e6c",
+    "external/normal_holdout-predictions.csv": "16fb8610e1159a7afcebf777df049199d52f8c1071e7b57aba13b5f93581cef2",
+    "external/summary.json": "b58f2697a2edb767d9bc72628ef26e66c9d6ac07eeeb8b31fd57b2cd3781d068",
+    "external/train_nrf_test_smf-hgb_cross_capture-bridge_attack_smf.npz": "0a06f7a1495437c615ab5617a527f7c3cec8ab003ea3c13d2b6a7edc55d709b7",
+    "external/train_nrf_test_smf-hgb_cross_capture-normal_holdout.npz": "4422c81d722f68a6d3cb185907414c623b31bcd5cd3fe02cbf4c99ff03a2e810",
+    "external/train_nrf_test_smf-mlp_cross_capture-bridge_attack_smf.npz": "8e0b0899d3bb249c46a8d94df13b058eabeed37163dfdc59816eece843901d90",
+    "external/train_nrf_test_smf-mlp_cross_capture-normal_holdout.npz": "93aae4f647075bec0518b558679e5fb2dfab9365806e2c706841dc0a8394267b",
+    "external/train_smf_test_nrf-hgb_cross_capture-bridge_attack_nrf.npz": "2116f7180983cd1c588cbdd81751ba6edfbec8898867da85cb31d8dede6802d9",
+    "external/train_smf_test_nrf-hgb_cross_capture-normal_holdout.npz": "e220df84004bdfa9752c6c573a13f717bd5bd513492db58f2f093f4434b3e4d6",
+    "external/train_smf_test_nrf-mlp_cross_capture-bridge_attack_nrf.npz": "bc444837367991ba88079488effddd21871ba50073cc5d72f48903e352d83de2",
+    "external/train_smf_test_nrf-mlp_cross_capture-normal_holdout.npz": "6048bd7461337beb5cae0cb71ef39d4ae1a76b27d6a99d1f584967e57ed991de"
+  }
+}
