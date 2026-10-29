@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "policy_id": "native-two-nf-independent-deployment-v1",
+  "slots": {
+    "ausf": {
+      "nf_type": "AUSF", "endpoint": "127.0.0.1", "fqdn": "ausf",
+      "services": [{"serviceName": "nausf-auth", "scheme": "http", "status": "REGISTERED", "versions": ["v1"],
+        "endpoints": [{"ip": "127.0.0.1", "port": 7778, "transport": "TCP"}]}]
+    },
+    "nssf": {
+      "nf_type": "NSSF", "endpoint": "127.0.0.1", "fqdn": "nssf",
+      "services": [{"serviceName": "nnssf-nsselection", "scheme": "http", "status": "REGISTERED", "versions": ["v2"],
+        "endpoints": [{"ip": "127.0.0.1", "port": 7779, "transport": "TCP"}]}]
+    }
+  }
+}

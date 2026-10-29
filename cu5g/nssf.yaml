@@ -1,0 +1,18 @@
+logger:
+  level: info
+  file:
+    path: /var/log/open5gs/nssf.log
+global:
+nssf:
+  sbi:
+    server:
+      - address: nssf
+        port: 7779
+    client:
+      nrf:
+        - uri: http://nrf:7777
+      nsi:
+        - uri: http://nrf:7777
+          s_nssai:
+            sst: 1
+            sd: 1

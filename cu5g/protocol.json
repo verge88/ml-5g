@@ -1,0 +1,14 @@
+{
+  "version": "native-cu-signed-witness-integration-v1",
+  "replicas": [301, 302, 303],
+  "open5gs_commit": "d9d3abdd480be96fac3bc8a997e83446648763ca",
+  "vendor_git_blob": "050eb43dbb4a4fb0eecaa5b81ef65ab130c8dc28",
+  "restart_slots": ["ausf", "nssf"],
+  "cycles": ["initial", "steady", "post-ausf-restart", "post-nssf-restart", "witness-recovery"],
+  "cu_wait_seconds": 24,
+  "witness_max_age_seconds": 5,
+  "lifecycle_max_age_seconds": 120,
+  "offline_controls": ["cu_mac", "cu_replay", "cu_binding", "witness_signature", "witness_replay", "missing_witness", "lifecycle_scope", "offline_profile_identity", "offline_profile_service"],
+  "scope": "live normal CU transport and authorized restarts; adversarial controls change offline copies only",
+  "independence": "separate witness signer, no NRF reads; shared host and NF-produced runtime identity export"
+}
