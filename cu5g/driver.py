@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import secrets
+import shutil
 import subprocess
 import sys
 import time
@@ -249,7 +250,7 @@ async def run():
                   "scope": "two NF types, benign native CU transport and restarts; offline corrupted-copy controls",
                   "trust_limits": ["NF-side Python agent signs; C NF forwards metadata", "runtime UUID export is NF-produced", "same host kernel", "no native malicious response mutation", "no production traffic or end-to-end UE test in this series"]}
         atomic(OUT / "evaluation.json", report)
-        Path("/tmp/instrumentation.patch").replace(OUT / "instrumentation.patch")
+        shutil.copyfile("/tmp/instrumentation.patch", OUT / "instrumentation.patch")
         print(json.dumps({"responses": report["native_cu_responses_verified"], "restarts": len(lifecycle), "controls": tests}), flush=True)
     finally:
         Path("/control/done").touch()
