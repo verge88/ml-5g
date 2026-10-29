@@ -1,0 +1,296 @@
+name: Complete registered 5G method comparison
+
+on:
+  push:
+    branches: [codex/full-method-experiment]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  OMP_NUM_THREADS: '1'
+  OPENBLAS_NUM_THREADS: '1'
+  MKL_NUM_THREADS: '1'
+  PYTHONHASHSEED: '0'
+
+jobs:
+  controls:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: python -m pip install -r requirements.txt cryptography==44.0.2 h2==4.2.0
+      - run: |
+          mkdir -p results
+          python -m pytest -q tests --basetemp=results/full-test-temp --junitxml=results/full-controls.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: full-controls
+          path: results/full-controls.xml
+
+  basic:
+    needs: controls
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - batch: a
+            seeds: '1201 1202'
+          - batch: b
+            seeds: '1203 1204'
+          - batch: c
+            seeds: '1205 1206'
+          - batch: d
+            seeds: '1207 1208'
+          - batch: e
+            seeds: '1209 1210'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - run: python -m fullsuite.basic --seeds ${{ matrix.seeds }} --output results/full/basic
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: full-basic-${{ matrix.batch }}
+          path: results/full/basic/
+
+  complex:
+    needs: controls
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - batch: a
+            seeds: '2201 2202'
+          - batch: b
+            seeds: '2203 2204'
+          - batch: c
+            seeds: '2205 2206'
+          - batch: d
+            seeds: '2207 2208'
+          - batch: e
+            seeds: '2209 2210'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - run: python -m fullsuite.complex --seeds ${{ matrix.seeds }} --output results/full/complex
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: full-complex-${{ matrix.batch }}
+          path: results/full/complex/
+
+  external:
+    needs: controls
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - run: python -m hybrid.fetch_data --output data/granomaly
+      - run: python -m fullsuite.external --data data/granomaly --output results/full/external
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: full-external
+          path: results/full/external/
+
+  native-registration:
+    needs: controls
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    services:
+      mongodb:
+        image: mongo:7
+        ports: ['27017:27017']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install official core build dependencies and packet observer
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends meson ninja-build build-essential flex bison cmake git pkg-config python3-setuptools python3-wheel libsctp-dev libc-ares-dev libgnutls28-dev libgcrypt-dev libssl-dev libidn-dev libmongoc-dev libbson-dev libyaml-dev libnghttp2-dev libmicrohttpd-dev libcurl4-gnutls-dev libtins-dev libtalloc-dev tcpdump tshark
+      - name: Build fixed unmodified official source
+        run: |
+          git clone --branch v2.7.6 --depth 1 https://github.com/open5gs/open5gs.git native-src
+          test "$(git -C native-src rev-parse HEAD)" = d9d3abdd480be96fac3bc8a997e83446648763ca
+          meson setup native-src/build native-src
+          ninja -C native-src/build -j 2
+      - name: Enable local TUN for official registration procedures
+        run: |
+          sudo ip tuntap add name ogstun mode tun
+          sudo ip addr add 10.45.0.1/16 dev ogstun
+          sudo ip addr add 2001:db8:cafe::1/48 dev ogstun
+          sudo ip link set ogstun up
+      - name: Run original registration suite with native packet and process evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p native-evidence
+          git -C native-src rev-parse HEAD > native-evidence/open5gs-commit.txt
+          git -C native-src status --porcelain > native-evidence/source-status.txt
+          dpkg-query -W > native-evidence/system-packages.txt
+          docker image inspect mongo:7 > native-evidence/mongo-image.json
+          sudo tcpdump -i lo -U -w "$PWD/native-evidence/registration.pcap" 'tcp port 7777 or sctp or udp port 8805 or udp port 2152' > native-evidence/tcpdump.log 2>&1 &
+          capture_pid=$!
+          (
+            while true; do
+              date -u +%FT%T.%N
+              ps -eo pid,comm,args | awk '/open5gs-[a-z]+d/ && !/awk/ {print}'
+              sleep 0.2
+            done
+          ) > native-evidence/processes.log &
+          observer_pid=$!
+          cleanup() { kill "$observer_pid" 2>/dev/null || true; sudo kill -INT "$capture_pid" 2>/dev/null || true; wait "$capture_pid" 2>/dev/null || true; }
+          trap cleanup EXIT
+          cd native-src
+          timeout 300 ./build/tests/registration/registration 2>&1 | tee ../native-evidence/registration.log
+          test -z "$(git status --porcelain --untracked-files=no)"
+          cd ..
+          cleanup
+          trap - EXIT
+          tshark -r native-evidence/registration.pcap -d tcp.port==7777,http2 -T fields -e _ws.col.Protocol 2>/dev/null | sort | uniq -c > native-evidence/protocol-counts.txt
+          cat native-evidence/protocol-counts.txt
+          test -s native-evidence/registration.pcap
+          grep -E 'All tests passed|SUCCESS|Passed' native-evidence/registration.log > native-evidence/suite-outcome.txt
+          sha256sum native-evidence/* > native-evidence-sha256.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: full-registration
+          path: |
+            native-evidence/
+            native-evidence-sha256.txt
+          if-no-files-found: warn
+          retention-days: 30
+
+  native-cu:
+    needs: controls
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        replica: [401, 402, 403]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt cryptography==44.0.2 h2==4.2.0
+      - name: Build Open5GS with benign runtime-export and CU-transport instrumentation
+        run: |
+          docker build -f cu5g/Dockerfile -t cu5g-native .
+          docker build -f fullsuite/Dockerfile -t fullsuite-native .
+      - name: Prepare separate controller NF and witness credentials
+        run: |
+          mkdir -p cu-out cu-control cu-runtime cu-nf cu-witness cu-nfkeys cu-public cu-private
+          for role in witness lifecycle; do
+            openssl ecparam -name prime256v1 -genkey -noout -out "cu-private/${role}.key"
+            openssl ec -in "cu-private/${role}.key" -pubout -out "cu-public/${role}.pub"
+          done
+          openssl rand -out cu-nfkeys/ausf.key 32
+          openssl rand -out cu-nfkeys/nssf.key 32
+          chmod 600 cu-private/*.key cu-nfkeys/*.key
+          docker image inspect fullsuite-native > cu-out/image.json
+          cp cu5g/protocol.json cu5g/policy.json cu-out/
+          cp cu-public/*.pub cu-out/
+      - name: Run actual NF registration and heartbeat CU exchange
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m cu5g.authority --control cu-control --key cu-private/lifecycle.key > cu-out/authority.log 2>&1 &
+          authority_pid=$!
+          trap 'kill "$authority_pid" 2>/dev/null || true' EXIT
+          docker run -d --name cu-core --network host --add-host nrf:127.0.0.1 --add-host ausf:127.0.0.1 --add-host nssf:127.0.0.1 \
+            -e REPLICA=${{ matrix.replica }} -e SOURCE_COMMIT=${{ github.sha }} \
+            -v "$PWD/cu-out:/out" -v "$PWD/cu-control:/control" -v "$PWD/cu-runtime:/runtime" \
+            -v "$PWD/cu-nf:/nf" -v "$PWD/cu-nfkeys:/nfkeys:ro" -v "$PWD/cu-public:/public:ro" \
+            -v "$PWD/cu-witness:/witness" fullsuite-native
+          docker run -d --name cu-witness --network host --pid=container:cu-core \
+            -v "$PWD/cu-control:/control:ro" -v "$PWD/cu-runtime:/runtime:ro" -v "$PWD/cu-witness:/witness" \
+            -v "$PWD/cu-private/witness.key:/witnesskey/witness.key:ro" fullsuite-native python3 -m cu5g.witness
+          core_status="$(docker wait cu-core)"
+          docker logs cu-core
+          test "$core_status" -eq 0
+          witness_status="$(docker wait cu-witness)"
+          test "$witness_status" -eq 0
+          wait "$authority_pid"
+          trap - EXIT
+      - name: Evaluate every applicable model on chronological native observations
+        run: python -m fullsuite.native_models --input cu-out/native --output cu-out/native-evaluation
+      - name: Save public diagnostics
+        if: always()
+        run: |
+          docker logs cu-core > cu-out/controller.log 2>&1 || true
+          docker logs cu-witness > cu-out/witness.log 2>&1 || true
+          docker top cu-core > cu-out/processes-at-end.txt 2>&1 || true
+          cp cu-control/lifecycle-response.json cu-out/last-lifecycle-bundle.json 2>/dev/null || true
+      - name: Remove local lab containers
+        if: always()
+        run: docker rm -f cu-witness cu-core >/dev/null 2>&1 || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: full-native-${{ matrix.replica }}
+          path: cu-out/
+          if-no-files-found: error
+          retention-days: 30
+
+  report:
+    needs: [basic, complex, external, native-cu, native-registration]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: full-*
+          path: artifacts
+      - run: python -m fullsuite.aggregate --input artifacts --output results/full-final
+      - run: cp fullsuite/protocol.json fullsuite/source-blobs.json results/full-final/
+      - run: cat results/full-final/REPORT.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: full-final-report
+          path: results/full-final/
