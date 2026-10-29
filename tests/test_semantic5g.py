@@ -1,5 +1,6 @@
 import csv
 import json
+import pytest
 from semantic5g.analyze import candidate, family, native_experiment, read_csv, signatures, template
 
 
@@ -61,3 +62,9 @@ def test_native_auth_result_uses_body_and_connection_id(tmp_path):
     result=native_experiment(saved,pcap,tmp_path)
     assert {r['authResult'] for r in result['auth_results']} == {'AUTHENTICATION_SUCCESS','AUTHENTICATION_FAILURE'}
     assert all(r['status']=='200' and r['complete'] and r['observed_hops']==1 for r in result['auth_results'])
+
+
+def test_empty_decode_cannot_silently_pass(tmp_path):
+    saved = tmp_path/'empty.json'; saved.write_text('[]')
+    with pytest.raises(ValueError, match='Empty HTTP/2'):
+        native_experiment(saved,tmp_path/'missing.pcap',tmp_path)

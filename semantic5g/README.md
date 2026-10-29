@@ -41,7 +41,7 @@ TS 29.509 permits HTTP 200 with `authResult=AUTHENTICATION_FAILURE`; therefore H
 
 ## Reproduction
 
-The workflow `.github/workflows/passive-semantic.yml` downloads only pinned recordings/frozen scores, runs six parser/correlation controls, decodes the saved PCAP, evaluates policies, and uploads redacted request tables and summaries. It requires neither a running 5G core nor attack code.
+The workflow `.github/workflows/passive-semantic.yml` downloads only pinned recordings/frozen scores, runs seven parser/correlation controls, decodes the saved PCAP, evaluates policies, and uploads redacted request tables and summaries. SBI port 7777 is explicitly decoded as HTTP/2 because heuristic detection differs across Wireshark versions; empty decoding is an error. It requires neither a running 5G core nor attack code.
 
 Sources:
 

@@ -183,6 +183,8 @@ def h2_frames(value):
 
 def native_experiment(json_path, pcap_path, out):
     packets = json.loads(json_path.read_text(encoding="utf-8-sig"))
+    if not packets:
+        raise ValueError("Empty HTTP/2 decoding cannot support a native semantic result")
     streams = defaultdict(lambda: {"request": {}, "response": {}, "request_body": bytearray(),
         "response_body": bytearray(), "frames": [], "complete": set()})
     seen = set()

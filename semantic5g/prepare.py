@@ -2,7 +2,6 @@
 import argparse
 import json
 from pathlib import Path
-import shutil
 import subprocess
 from .analyze import digest
 
@@ -22,8 +21,10 @@ def main():
     a.output.mkdir(parents=True, exist_ok=True)
     pcap = a.inputs / "registration/native-evidence/registration.pcap"
     with (a.output / "http2-decoded.json").open("w", encoding="utf-8") as f:
-        subprocess.run([a.tshark, "-r", str(pcap), "-Y", "http2", "-T", "json", "--no-duplicate-keys",
+        subprocess.run([a.tshark, "-r", str(pcap), "-d", "tcp.port==7777,http2", "-Y", "http2", "-T", "json", "--no-duplicate-keys",
             "-J", "frame ip tcp http2 json"], stdout=f, check=True)
+    if not json.loads((a.output / "http2-decoded.json").read_text()):
+        raise ValueError("The pinned capture decoded to zero HTTP/2 packets")
     version = subprocess.check_output([a.tshark, "--version"], text=True).splitlines()[0]
     (a.output / "decoder-provenance.json").write_text(json.dumps(dict(tshark=version,
         input_manifest_sha256=digest(manifest_path), files_verified=len(manifest["files"]),
