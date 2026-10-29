@@ -1,0 +1,122 @@
+name: Native CU transport and signed runtime witness
+
+on:
+  push:
+    branches: [codex/native-cu-witness]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  controls:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install pytest==8.3.5 cryptography==44.0.2
+      - run: python -m pytest -q tests/test_cu5g.py --junitxml=results/cu-controls.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cu-witness-controls
+          path: results/cu-controls.xml
+
+  native-cu:
+    needs: controls
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        replica: [301, 302, 303]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install cryptography==44.0.2
+      - name: Build Open5GS with benign runtime-export and CU-transport instrumentation
+        run: docker build -f cu5g/Dockerfile -t cu5g-native .
+      - name: Prepare separate controller NF and witness credentials
+        run: |
+          mkdir -p cu-out cu-control cu-runtime cu-nf cu-witness cu-nfkeys cu-public cu-private
+          for role in witness lifecycle; do
+            openssl ecparam -name prime256v1 -genkey -noout -out "cu-private/${role}.key"
+            openssl ec -in "cu-private/${role}.key" -pubout -out "cu-public/${role}.pub"
+          done
+          openssl rand -out cu-nfkeys/ausf.key 32
+          openssl rand -out cu-nfkeys/nssf.key 32
+          chmod 600 cu-private/*.key cu-nfkeys/*.key
+          docker image inspect cu5g-native > cu-out/image.json
+          cp cu5g/protocol.json cu5g/policy.json cu-out/
+          cp cu-public/*.pub cu-out/
+      - name: Run actual NF registration and heartbeat CU exchange
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m cu5g.authority --control cu-control --key cu-private/lifecycle.key > cu-out/authority.log 2>&1 &
+          authority_pid=$!
+          trap 'touch cu-control/done; kill "$authority_pid" 2>/dev/null || true' EXIT
+          docker run -d --name cu-core --network host --add-host nrf:127.0.0.1 --add-host ausf:127.0.0.1 --add-host nssf:127.0.0.1 \
+            -e REPLICA=${{ matrix.replica }} -e SOURCE_COMMIT=${{ github.sha }} \
+            -v "$PWD/cu-out:/out" -v "$PWD/cu-control:/control" -v "$PWD/cu-runtime:/runtime" \
+            -v "$PWD/cu-nf:/nf" -v "$PWD/cu-nfkeys:/nfkeys:ro" -v "$PWD/cu-public:/public:ro" \
+            -v "$PWD/cu-witness:/witness" cu5g-native
+          docker run -d --name cu-witness --network host --pid=container:cu-core \
+            -v "$PWD/cu-control:/control:ro" -v "$PWD/cu-runtime:/runtime:ro" -v "$PWD/cu-witness:/witness" \
+            -v "$PWD/cu-private/witness.key:/witnesskey/witness.key:ro" cu5g-native python3 -m cu5g.witness
+          core_status="$(docker wait cu-core)"
+          docker logs cu-core
+          test "$core_status" -eq 0
+          witness_status="$(docker wait cu-witness)"
+          test "$witness_status" -eq 0
+          touch cu-control/done
+          wait "$authority_pid"
+          trap - EXIT
+      - name: Save public diagnostics
+        if: always()
+        run: |
+          docker logs cu-core > cu-out/controller.log 2>&1 || true
+          docker logs cu-witness > cu-out/witness.log 2>&1 || true
+          docker top cu-core > cu-out/processes-at-end.txt 2>&1 || true
+          cp cu-control/lifecycle-response.json cu-out/last-lifecycle-bundle.json 2>/dev/null || true
+      - name: Remove local lab containers
+        if: always()
+        run: docker rm -f cu-witness cu-core >/dev/null 2>&1 || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-cu-${{ matrix.replica }}
+          path: cu-out/
+          if-no-files-found: error
+          retention-days: 30
+
+  report:
+    needs: native-cu
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: native-cu-*
+          path: artifacts
+      - run: python -m cu5g.aggregate --input artifacts --output results/cu-final
+      - run: cat results/cu-final/REPORT.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: native-cu-witness-report
+          path: results/cu-final/
