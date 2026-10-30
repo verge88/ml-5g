@@ -179,26 +179,37 @@ def prepare_captures(z,scratch):
 def requests(path,ports,scratch):
     fields=["frame.number","frame.time_epoch","ip.src","ip.dst","http2.headers.method","http2.headers.path",
         "http.request.method","http.request.uri"]
-    command=["tshark","-n","-r",str(path)]
-    for port in sorted(ports):command += ["-d",f"tcp.port=={port},http2"]
-    command += ["-Y","http2.headers.method || http.request.method","-T","fields","-E","separator=\t","-E","quote=d",
+    options=["-Y","http2.headers.method || http.request.method","-T","fields","-E","separator=\t","-E","quote=d",
         "-E","occurrence=a","-E","aggregator=|"]
-    for field in fields:command += ["-e",field]
-    rows=[];ambiguous=0
-    with (scratch/(path.stem+"-tshark.log")).open("w") as log:
-        process=subprocess.Popen(command,stdout=subprocess.PIPE,stderr=log,text=True,encoding="utf-8",errors="replace")
-        for row in csv.reader(process.stdout,delimiter="\t",quotechar='"'):
-            if len(row)!=len(fields) or any("|" in row[i] for i in (2,3,4,5,6,7)):
-                ambiguous+=1;continue
-            frame,stamp,source,dest,h2_method,h2_resource,h1_method,h1_resource=row
-            if h2_method and h1_method:ambiguous+=1;continue
-            method,resource,wire=(h2_method,h2_resource,"HTTP2") if h2_method else (h1_method,h1_resource,"HTTP1")
-            if method not in ("GET","POST","PUT","PATCH","DELETE","OPTIONS","HEAD") or not resource:
-                ambiguous+=1;continue
-            rows.append(dict(frame=int(frame),time=float(stamp),source=source,destination=dest,
-                method=method,path=template(resource),wire=wire))
-        if process.wait()!=0:raise ValueError("offline tshark decoding failed; inspect scratch log")
-    return sorted(rows,key=lambda r:r["time"]),ambiguous
+    for field in fields:options += ["-e",field]
+    candidates=defaultdict(dict);ambiguous=set()
+    # One forced decoder cannot recognize both wire formats on the same port.
+    # Decode independently, then require a unique request interpretation per frame.
+    for binding in ("http","http2"):
+        command=["tshark","-n","-r",str(path)]
+        for port in sorted(ports):command += ["-d",f"tcp.port=={port},{binding}"]
+        command+=options
+        with (scratch/(path.stem+"-"+binding+"-tshark.log")).open("w") as log:
+            process=subprocess.Popen(command,stdout=subprocess.PIPE,stderr=log,text=True,encoding="utf-8",errors="replace")
+            for row in csv.reader(process.stdout,delimiter="\t",quotechar='"'):
+                key=row[0] if row else "missing"
+                if len(row)!=len(fields) or any("|" in row[i] for i in (2,3,4,5,6,7)):
+                    ambiguous.add(key);continue
+                frame,stamp,source,dest,h2_method,h2_resource,h1_method,h1_resource=row
+                if h2_method and h1_method:ambiguous.add(key);continue
+                method,resource,wire=(h2_method,h2_resource,"HTTP2") if h2_method else (h1_method,h1_resource,"HTTP1")
+                if method not in ("GET","POST","PUT","PATCH","DELETE","OPTIONS","HEAD") or not resource:
+                    ambiguous.add(key);continue
+                value=dict(frame=int(frame),time=float(stamp),source=source,destination=dest,
+                    method=method,path=template(resource),wire=wire)
+                signature=(source,dest,method,value["path"],wire)
+                candidates[key][signature]=value
+            if process.wait()!=0:raise ValueError("offline tshark decoding failed; inspect scratch log")
+    rows=[]
+    for key,values in candidates.items():
+        if len(values)!=1:ambiguous.add(key)
+        if key not in ambiguous:rows.append(next(iter(values.values())))
+    return sorted(rows,key=lambda r:r["time"]),len(ambiguous)
 
 
 def coverage(benign,mixed,db):
