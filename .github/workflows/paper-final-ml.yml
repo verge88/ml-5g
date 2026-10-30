@@ -1,0 +1,114 @@
+name: Article final ML comparison against published methods
+on:
+  push:
+    branches: [codex/article-final-ml]
+    paths: ['paper5g/benchmark.py', 'paper5g/engines.py', 'paper5g/references.py', 'paper5g/report.py', 'paper5g/analysis-plan.json', 'tests/test_paper_models.py', '.github/workflows/paper-final-ml.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+env:
+  OMP_NUM_THREADS: '2'
+  OPENBLAS_NUM_THREADS: '2'
+  MKL_NUM_THREADS: '2'
+  PYTHONHASHSEED: '0'
+  DATA_RUN_ID: '41096216782'
+jobs:
+  controls:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - run: python -m pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cpu
+      - run: python -m pip install torch-geometric==2.6.1
+      - name: Fetch only pinned published ML modules
+        run: python -m paper5g.references --output .references --manifest registered/reference-source-hashes.json
+      - name: Wait for the registered full-data preparation
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run watch "$DATA_RUN_ID" --exit-status --interval 30
+      - uses: actions/download-artifact@v4
+        with:
+          name: article-preparation-provenance
+          path: preparation-provenance
+          github-token: ${{ github.token }}
+          run-id: ${{ env.DATA_RUN_ID }}
+      - name: Verify prepared-source version and model safeguards
+        run: |
+          test "$(cat preparation-provenance/source-commit.txt)" = 'f0350268489528798a8062afe5efbe2ba9cbfe85'
+          sha256sum --check preparation-provenance/source-sha256.txt
+          python -m pytest -q tests/test_coverage5g.py tests/test_paper5g.py tests/test_paper_models.py tests/test_neural5g.py --junitxml=registered/tests.xml
+          cp paper5g/protocol.json paper5g/analysis-plan.json registered/
+          git rev-parse HEAD > registered/source-commit.txt
+          sha256sum paper5g/*.py paper5g/*.json neural5g/models.py > registered/source-sha256.txt
+          python -m pip freeze > registered/environment.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: article-training-provenance
+          path: registered/
+          retention-days: 90
+  methods:
+    needs: controls
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        method: [tgn, gnn, lstm, transformer, granomaly_tgn, deep_svdd, kitnet, isolation_forest]
+        input: [base, context]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - run: python -m pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cpu
+      - run: python -m pip install torch-geometric==2.6.1
+      - uses: actions/download-artifact@v4
+        with:
+          name: article-full-numeric-data
+          path: prepared
+          github-token: ${{ github.token }}
+          run-id: ${{ env.DATA_RUN_ID }}
+      - name: Train on normal events and score complete holdouts
+        run: python -m paper5g.benchmark --data prepared --output results --method ${{ matrix.method }} --input ${{ matrix.input }}
+      - run: python -m pip freeze > results/environment.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: article-model-${{ matrix.method }}-${{ matrix.input }}
+          path: results/
+          if-no-files-found: error
+          retention-days: 90
+  report:
+    needs: methods
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install numpy==2.2.6 matplotlib==3.10.1
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: article-model-*
+          path: inputs
+      - run: python -m paper5g.report --input inputs --output final-report
+      - run: cat final-report/REPORT.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: article-final-report
+          path: final-report/
+          retention-days: 90
