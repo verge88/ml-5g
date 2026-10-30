@@ -1,0 +1,101 @@
+name: Contextual SBI models versus stateful rules
+
+on:
+  push:
+    branches: [codex/contextual-sbi-ml]
+    paths: ['context5g/**', 'tests/test_context5g.py', '.github/workflows/contextual-sbi-ml.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  OMP_NUM_THREADS: '2'
+  OPENBLAS_NUM_THREADS: '2'
+  MKL_NUM_THREADS: '2'
+  PYTHONHASHSEED: '0'
+
+jobs:
+  controls:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - run: python -m pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cpu
+      - run: |
+          mkdir -p registered
+          python -m pytest -q tests/test_context5g.py tests/test_neural5g.py tests/test_semantic5g.py --junitxml=registered/tests.xml
+          cp context5g/protocol.json registered/
+          git rev-parse HEAD > registered/source-commit.txt
+          sha256sum context5g/*.py context5g/protocol.json neural5g/*.py > registered/source-sha256.txt
+          python -m hybrid.fetch_data --output data/granomaly
+      - uses: actions/upload-artifact@v4
+        with:
+          name: context-pinned-data
+          path: data/granomaly/
+          retention-days: 90
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: context-registered
+          path: registered/
+          retention-days: 90
+
+  methods:
+    needs: controls
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    strategy:
+      fail-fast: false
+      matrix:
+        method: [rules, tgn, gnn, lstm, transformer, hgb]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - run: python -m pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cpu
+      - uses: actions/download-artifact@v4
+        with:
+          name: context-pinned-data
+          path: data/granomaly
+      - run: python -m context5g.benchmark --data data/granomaly --model ${{ matrix.method }} --output results
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: context-${{ matrix.method }}
+          path: results/
+          if-no-files-found: error
+          retention-days: 90
+
+  report:
+    needs: methods
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: context-*
+          path: inputs
+      - run: python -m context5g.report --input inputs --output final-report
+      - run: cat final-report/REPORT.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: context-final-report
+          path: final-report/
+          retention-days: 90
