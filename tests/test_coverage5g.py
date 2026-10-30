@@ -58,7 +58,8 @@ def test_truncated_pcap_is_rejected():
 
 @pytest.mark.parametrize("permuted",[False,True])
 @pytest.mark.parametrize("omitted_source",[False,True])
-def test_archive_alignment_and_label_map(tmp_path,permuted,omitted_source):
+@pytest.mark.parametrize("reversed_processed",[False,True])
+def test_archive_alignment_and_label_map(tmp_path,permuted,omitted_source,reversed_processed):
     path=tmp_path/"fixture.zip"
     with ZipFile(path,"w") as z:
         for i in range(1,11):
@@ -68,6 +69,7 @@ def test_archive_alignment_and_label_map(tmp_path,permuted,omitted_source):
                 (i*10+3,marker(attack=False)),(i*10+4,udp()),(i*10+5,marker(attack=False,start=False))]
             if omitted_source:original.insert(1,(i*10,udp(source=P["marker_attacker_ipv4"],payload=b"omitted")))
             processed=[(i*10+1,udp(source="10.100.200.12")),(i*10+4,udp())]
+            if reversed_processed:processed.reverse()
             z.writestr(f"CTD5G/both/original/both_original ({i}).pcap",pcap(original))
             number=(i%4)+1 if permuted else i
             z.writestr(f"CTD5G/both/processed/both_processed ({number}).pcap",pcap(processed))
@@ -77,7 +79,29 @@ def test_archive_alignment_and_label_map(tmp_path,permuted,omitted_source):
     assert db.execute("SELECT count(*) FROM labels WHERE label=0").fetchone()[0]==4
     assert audit["collection_counts"]["mixed"]==1 and audit["segment_counts"]["mixed"]==4
     assert audit["packet_counts"]["mixed_marker_remnants"]==0
-    assert audit["packet_counts"].get("source_packets_omitted_from_processed",0)==(4 if omitted_source else 0)
+    assert audit["packet_counts"]["original_ipv4_indexed"]==8+(4 if omitted_source else 0)
+    assert audit["packet_counts"]["processed_ipv4_with_unique_provenance"]==8
+    db.close()
+
+
+@pytest.mark.parametrize("ambiguous",[False,True])
+def test_unresolved_provenance_never_receives_a_label(tmp_path,ambiguous):
+    path=tmp_path/"fixture.zip"
+    with ZipFile(path,"w") as z:
+        for i in range(1,11):
+            z.writestr(f"CTD5G/benign/processed/benign_processed ({i}).pcap",pcap([(i,udp())]))
+        for i in range(1,5):
+            original=[(10,marker()),(11,udp(source=P["marker_attacker_ipv4"]))]
+            z.writestr(f"CTD5G/both/original/both_original ({i}).pcap",pcap(original))
+            # Equal content/time across distinct source segments is ambiguous.
+            cleaned=udp() if ambiguous else udp(payload=b"no original counterpart")
+            z.writestr(f"CTD5G/both/processed/both_processed ({i}).pcap",pcap([(11,cleaned)]))
+    scratch=tmp_path/"scratch";scratch.mkdir()
+    with ZipFile(path) as z:db,audit,_=prepare_captures(z,scratch)
+    assert db.execute("SELECT count(*) FROM labels").fetchone()[0]==0
+    key="ambiguous_processed_provenance" if ambiguous else "unmatched_processed_ipv4"
+    assert audit["packet_counts"][key]==4
+    assert audit["packet_counts"]["unknown_mixed_packets"]==4
     db.close()
 
 
