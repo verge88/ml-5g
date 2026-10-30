@@ -1,0 +1,13 @@
+{
+  "registered_before_training": true,
+  "primary_configuration": "tgn/context, all three seeds; not selected by test performance",
+  "primary_comparator": "published Granomaly TGN under the common protocol, context input",
+  "additional_comparators": ["KitNET", "Deep SVDD", "Isolation Forest"],
+  "primary_operating_point": "Threshold from normal calibration only, target FPR 0.1%; report actual test FPR as well as recall",
+  "secondary_operating_point": "Calibration target FPR 1%",
+  "report_all": "Every model, both feature sets, all registered seeds, every target capture, failures and budget violations. No rules and no comparison to published percentages from other datasets.",
+  "initialization_uncertainty": "Mean, standard deviation and range over three seeds, with KitNET single deterministic author seed explicitly identified",
+  "data_uncertainty": "Per-record conditional 512-request block bootstrap on fixed-score predictions; no claims about independent deployments",
+  "test_size": "Unique eligible requests counted once across clean holdout and all target captures; exclude unknown labels only from labelled metrics, not prediction arrays. Training repeats and bootstrap draws never increase sample counts.",
+  "claim_scope": "Direct common-protocol ML component benchmark and feature ablation. Existing dataset limitations remain; results cannot establish the full CU/witness integrity method or superiority on unobserved semantic attacks."
+}
