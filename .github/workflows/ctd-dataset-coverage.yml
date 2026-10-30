@@ -33,6 +33,8 @@ jobs:
           sudo apt-get update
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tshark
           df -h .
+      - name: Verify installed decoder before downloading data
+        run: python -m coverage5g.audit --preflight --scratch scratch --output results
       - name: Audit published captures without replay
         run: python -m coverage5g.audit --scratch scratch --output results
       - name: Show aggregate audit
