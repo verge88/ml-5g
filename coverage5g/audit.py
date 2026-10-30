@@ -205,7 +205,11 @@ def requests(path,ports,scratch):
                     method=method,path=template(resource),wire=wire)
                 signature=(source,dest,method,value["path"],wire)
                 candidates[key][signature]=value
-            if process.wait()!=0:raise ValueError("offline tshark decoding failed; inspect scratch log")
+            code=process.wait()
+        if code!=0:
+            message=(scratch/(path.stem+"-"+binding+"-tshark.log")).read_text(encoding="utf-8",errors="replace")
+            message=re.sub(r"\b(?:\d{1,3}\.){3}\d{1,3}\b","<address>",message)
+            raise ValueError(f"offline tshark {binding} decoding failed ({code}): {message[:2000]}")
     rows=[]
     for key,values in candidates.items():
         if len(values)!=1:ambiguous.add(key)
@@ -277,6 +281,7 @@ def main(scratch,output):
     print("Archive checksum verified; matching packet records",flush=True)
     with ZipFile(archive) as z:
         db,packet_audit,ports=prepare_captures(z,scratch)
+    (output/"packet-audit.json").write_text(json.dumps(packet_audit,indent=2),encoding="utf-8")
     print("Packet matching complete; decoding offline requests",flush=True)
     benign,ambiguous_normal=requests(scratch/"benign.pcap",ports,scratch)
     mixed,ambiguous_mixed=requests(scratch/"mixed.pcap",ports,scratch)
@@ -305,4 +310,12 @@ def main(scratch,output):
 
 if __name__=="__main__":
     p=argparse.ArgumentParser();p.add_argument("--scratch",type=Path,required=True);p.add_argument("--output",type=Path,required=True)
-    a=p.parse_args();main(a.scratch,a.output)
+    p.add_argument("--preflight",action="store_true")
+    a=p.parse_args()
+    if a.preflight:
+        a.scratch.mkdir(parents=True,exist_ok=True)
+        fixture=a.scratch/"decoder-preflight.pcap"
+        fixture.write_bytes(struct.pack("<IHHIIII",0xa1b2c3d4,2,4,0,0,65535,1))
+        assert requests(fixture,{8000},a.scratch)==([],0)
+        print("Both offline decoders and export fields accepted",flush=True)
+    else:main(a.scratch,a.output)
