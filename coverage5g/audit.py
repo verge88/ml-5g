@@ -105,7 +105,8 @@ def prepare_captures(z,scratch):
     names=z.namelist()
     benign=ordered(z,[n for n in names if re.fullmatch(r"CTD5G/benign/processed/benign_processed \(\d+\)\.pcap",n)])
     mixed=ordered(z,[n for n in names if re.fullmatch(r"CTD5G/both/original/both_original \(\d+\)\.pcap",n)])
-    if len(benign)!=10 or len(mixed)!=4:raise ValueError("published archive layout changed")
+    mixed_processed=ordered(z,[n for n in names if re.fullmatch(r"CTD5G/both/processed/both_processed \(\d+\)\.pcap",n)])
+    if len(benign)!=10 or len(mixed)!=4 or len(mixed_processed)!=4:raise ValueError("published archive layout changed")
     stats=Counter();ports=set();macs=defaultdict(set);quality=defaultdict(Counter)
     db=sqlite3.connect(scratch/"labels.sqlite")
     db.execute("CREATE TABLE labels(frame INTEGER PRIMARY KEY,label INTEGER,kind TEXT,episode TEXT,mac TEXT,ip_valid INTEGER)")
@@ -122,21 +123,30 @@ def prepare_captures(z,scratch):
     frame=0;batch=[];episodes=set()
     with (scratch/"mixed.pcap").open("wb") as out:
         header=[]
-        for name in mixed:
-            processed=name.replace("/original/","/processed/").replace("both_original","both_processed")
+        for name,processed in zip(mixed,mixed_processed):
             states={}
             with z.open(name) as original,z.open(processed) as cleaned:
-                cleaned_iter=iter(packets(cleaned))
-                for original_item in packets(original):
-                    parsed=decode(original_item[2])
-                    if parsed is None:continue
-                    labelled=assign_label(parsed,states)
-                    if labelled is None:
-                        stats["original_marker_packets"]+=1;continue
-                    item=next(cleaned_iter,None)
-                    if item is None:raise ValueError("processed capture ended early")
-                    clean=decode(item[2]);frame+=1
-                    if clean is None or abs(item[0]-original_item[0])>.000002 or clean["canonical"]!=parsed["canonical"]:
+                def original_records():
+                    for original_item in packets(original):
+                        parsed=decode(original_item[2])
+                        if parsed is None:
+                            stats["original_non_ipv4_excluded"]+=1;continue
+                        labelled=assign_label(parsed,states)
+                        if labelled is None:
+                            stats["original_marker_packets"]+=1;continue
+                        yield original_item,parsed,labelled
+                original_iter=iter(original_records());current=next(original_iter,None)
+                for item in packets(cleaned):
+                    clean=decode(item[2])
+                    if clean is None:
+                        stats["processed_non_ipv4_excluded"]+=1;continue
+                    while current is not None and current[0][0]<item[0]-.000002:
+                        stats["source_packets_omitted_from_processed"]+=1
+                        stats["omitted_source_protocol_"+str(current[1]["proto"])]+=1
+                        current=next(original_iter,None)
+                    if current is None:raise ValueError("processed packet has no original")
+                    original_item,parsed,labelled=current;frame+=1
+                    if abs(item[0]-original_item[0])>.000002 or clean["canonical"]!=parsed["canonical"]:
                         raise ValueError("original/processed packet alignment failed")
                     label,kind,episode=labelled
                     if label>=0:
@@ -152,12 +162,17 @@ def prepare_captures(z,scratch):
                     write_record(out,item,header)
                     if len(batch)>=10000:
                         db.executemany("INSERT INTO labels VALUES(?,?,?,?,?,?)",batch);batch=[]
-                if next(cleaned_iter,None) is not None:raise ValueError("extra processed packets")
+                    current=next(original_iter,None)
+                while current is not None:
+                    stats["source_packets_omitted_from_processed"]+=1
+                    stats["omitted_source_protocol_"+str(current[1]["proto"])]+=1
+                    current=next(original_iter,None)
     if batch:db.executemany("INSERT INTO labels VALUES(?,?,?,?,?,?)",batch)
     db.commit()
     return db,dict(packet_counts=dict(stats),checksum_by_label={k:dict(v) for k,v in quality.items()},
         source_mac_counts={str(k):len(v) for k,v in macs.items()},
         source_mac_overlap=len(macs[0]&macs[1]),decoded_marker_episodes=len(episodes),
+        segment_pairing=[dict(original=a,processed=b) for a,b in zip(mixed,mixed_processed)],
         segment_counts=dict(benign=10,mixed=4),collection_counts=dict(benign=1,mixed=1)),ports
 
 
@@ -246,9 +261,11 @@ def download(path):
 def main(scratch,output):
     scratch.mkdir(parents=True,exist_ok=True);output.mkdir(parents=True,exist_ok=True)
     if shutil.disk_usage(scratch).free<6*1024**3:raise ValueError("less than 6 GiB free scratch space")
-    archive=scratch/"CTD5G.zip";download(archive)
+    archive=scratch/"CTD5G.zip";print("Downloading and verifying published archive",flush=True);download(archive)
+    print("Archive checksum verified; matching packet records",flush=True)
     with ZipFile(archive) as z:
         db,packet_audit,ports=prepare_captures(z,scratch)
+    print("Packet matching complete; decoding offline requests",flush=True)
     benign,ambiguous_normal=requests(scratch/"benign.pcap",ports,scratch)
     mixed,ambiguous_mixed=requests(scratch/"mixed.pcap",ports,scratch)
     counts=coverage(benign,mixed,db);db.close()
