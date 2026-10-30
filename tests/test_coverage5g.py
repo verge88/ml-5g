@@ -56,7 +56,9 @@ def test_truncated_pcap_is_rejected():
         list(packets(BytesIO(data[:-2])))
 
 
-def test_archive_alignment_and_label_map(tmp_path):
+@pytest.mark.parametrize("permuted",[False,True])
+@pytest.mark.parametrize("omitted_source",[False,True])
+def test_archive_alignment_and_label_map(tmp_path,permuted,omitted_source):
     path=tmp_path/"fixture.zip"
     with ZipFile(path,"w") as z:
         for i in range(1,11):
@@ -64,15 +66,18 @@ def test_archive_alignment_and_label_map(tmp_path):
         for i in range(1,5):
             original=[(i*10,marker()),(i*10+1,udp(source=P["marker_attacker_ipv4"])),(i*10+2,marker(start=False)),
                 (i*10+3,marker(attack=False)),(i*10+4,udp()),(i*10+5,marker(attack=False,start=False))]
+            if omitted_source:original.insert(1,(i*10,udp(source=P["marker_attacker_ipv4"],payload=b"omitted")))
             processed=[(i*10+1,udp(source="10.100.200.12")),(i*10+4,udp())]
             z.writestr(f"CTD5G/both/original/both_original ({i}).pcap",pcap(original))
-            z.writestr(f"CTD5G/both/processed/both_processed ({i}).pcap",pcap(processed))
+            number=(i%4)+1 if permuted else i
+            z.writestr(f"CTD5G/both/processed/both_processed ({number}).pcap",pcap(processed))
     scratch=tmp_path/"scratch";scratch.mkdir()
     with ZipFile(path) as z:db,audit,ports=prepare_captures(z,scratch)
     assert db.execute("SELECT count(*) FROM labels WHERE label=1").fetchone()[0]==4
     assert db.execute("SELECT count(*) FROM labels WHERE label=0").fetchone()[0]==4
     assert audit["collection_counts"]["mixed"]==1 and audit["segment_counts"]["mixed"]==4
     assert audit["packet_counts"]["mixed_marker_remnants"]==0
+    assert audit["packet_counts"].get("source_packets_omitted_from_processed",0)==(4 if omitted_source else 0)
     db.close()
 
 
