@@ -1,0 +1,47 @@
+name: Article benchmark - full data preparation
+on:
+  push:
+    branches: [codex/article-final-ml]
+    paths: ['paper5g/prepare.py', 'paper5g/protocol.json', '.github/workflows/paper-prepare.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - name: Verify data safeguards
+        run: |
+          mkdir -p registered
+          python -m pytest -q tests/test_coverage5g.py tests/test_paper5g.py --junitxml=registered/tests.xml
+          cp paper5g/protocol.json registered/
+          git rev-parse HEAD > registered/source-commit.txt
+          sha256sum paper5g/*.py paper5g/protocol.json coverage5g/*.py > registered/source-sha256.txt
+      - name: Install maintained offline decoder
+        run: |
+          sudo add-apt-repository -y ppa:wireshark-dev/stable
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tshark
+          tshark --version > registered/decoder-version.txt
+          python -m coverage5g.audit --preflight --scratch scratch --output registered
+      - name: Prepare every eligible SBI request without replay
+        run: python -m paper5g.prepare --scratch scratch --output prepared
+      - uses: actions/upload-artifact@v4
+        with:
+          name: article-full-numeric-data
+          path: prepared/
+          retention-days: 90
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: article-preparation-provenance
+          path: registered/
+          retention-days: 90
