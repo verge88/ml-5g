@@ -95,3 +95,20 @@ def test_known_operation_coverage_controls_wire_version_and_independence(monkeyp
     result=coverage(benign,[dict(r,wire="HTTP1") for r in mixed],db)
     assert result["attack_requests_on_known_operations"]==2
     assert result["attack_requests_on_known_operations_and_wire"]==0 and not result["exploratory_coverage_gate"]
+
+
+def test_both_wire_decoders_preserve_http1_and_deduplicate_http2(tmp_path,monkeypatch):
+    import coverage5g.audit as module
+    first="1\t1.0\ta\tb\t\t\tGET\t/known\n"
+    second="2\t1.1\ta\tb\tPOST\t/known\t\t\n"
+    calls=[]
+    class Process:
+        def __init__(self,command,**kwargs):
+            calls.append(command)
+            generic=any(arg.endswith(",http") for arg in command)
+            self.stdout=__import__("io").StringIO(first+second if generic else second)
+        def wait(self):return 0
+    monkeypatch.setattr(module.subprocess,"Popen",Process)
+    rows,ambiguous=module.requests(tmp_path/"example.pcap",{8000},tmp_path)
+    assert len(calls)==2 and ambiguous==0
+    assert [r["wire"] for r in rows]==["HTTP1","HTTP2"]
