@@ -30,8 +30,11 @@ jobs:
           sha256sum coverage5g/*.py coverage5g/protocol.json > results/source-sha256.txt
       - name: Install offline packet decoder
         run: |
+          sudo add-apt-repository -y ppa:wireshark-dev/stable
           sudo apt-get update
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tshark
+          tshark --version
+          dpkg-query -W tshark libwireshark19 > results/decoder-packages.txt
           df -h .
       - name: Verify installed decoder before downloading data
         run: python -m coverage5g.audit --preflight --scratch scratch --output results
