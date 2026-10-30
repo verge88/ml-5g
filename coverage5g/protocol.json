@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "scope": "Offline coverage and label-leakage audit of published CTD5G PCAPs; no model fitting, traffic generation or replay",
   "dataset_record": "https://zenodo.org/records/15853959",
   "dataset_url": "https://zenodo.org/api/records/15853959/files/CTD5G.zip/content",
@@ -17,7 +17,7 @@
   "documented_mixed_collections": 1,
   "labels": "Conservative marker-associated labels reconstructed from original packets. Only attacker-address packets inside an active attack marker receive label 1; nonattacker packets inside benign markers receive label 0; all others UNKNOWN. Marker state resets per original archive segment, matching the publisher's per-file processing boundary.",
   "alignment": "Independently order original and processed segments by packet time. Verify each processed IPv4 packet as an ordered subset of original packets by timestamp and canonical IP bytes excluding rewritten addresses and IPv4/transport checksums. Count original packets omitted by publication processing and excluded non-IPv4 frames. Never transfer a label without a matching original packet. Any mismatch blocks eligibility.",
-  "requests": "Decode HTTP/1 and HTTP/2 offline with tshark; accept only one method and one resource per decoded packet, exclude ambiguous multi-request rows. Resource identifiers and query values removed with existing template normalizer. Report wire-protocol novelty separately.",
+  "requests": "Decode HTTP/1 and HTTP/2 independently with tshark on observed plaintext HTTP/2-preface ports, combine duplicate interpretations and accept only one method/resource/wire interpretation per frame. Exclude ambiguous multi-request rows. Resource identifiers and query values removed with existing template normalizer. Report wire-protocol novelty separately.",
   "peer_semantics": "Observed processed IP peers only; not authenticated roles. HTTP status and token claims are not used to determine authorization.",
   "leakage_audit": ["marker remnants", "source MAC overlap by reconstructed class", "IPv4 checksum validity by reconstructed class", "unlabelled HTTP requests", "original/processed alignment"],
   "forbidden_future_features": ["markers", "attack type", "procedure IDs", "MAC addresses", "checksum validity", "absolute time", "capture filename", "subscriber IDs", "unverified token claims as trusted roles"],
