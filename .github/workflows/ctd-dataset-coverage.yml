@@ -1,0 +1,50 @@
+name: CTD5G coverage and leakage audit
+
+on:
+  push:
+    branches: [codex/ctd-dataset-coverage]
+    paths: ['coverage5g/**', 'tests/test_coverage5g.py', '.github/workflows/ctd-dataset-coverage.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install pytest==8.3.5
+      - name: Verify parser and label safeguards
+        run: |
+          mkdir -p results
+          python -m pytest -q tests/test_coverage5g.py --junitxml=results/tests.xml
+          cp coverage5g/protocol.json results/
+          git rev-parse HEAD > results/source-commit.txt
+          sha256sum coverage5g/*.py coverage5g/protocol.json > results/source-sha256.txt
+      - name: Install offline packet decoder
+        run: |
+          sudo add-apt-repository -y ppa:wireshark-dev/stable
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tshark
+          tshark --version
+          dpkg-query -W tshark libwireshark19 > results/decoder-packages.txt
+          df -h .
+      - name: Verify installed decoder before downloading data
+        run: python -m coverage5g.audit --preflight --scratch scratch --output results
+      - name: Audit published captures without replay
+        run: python -m coverage5g.audit --scratch scratch --output results
+      - name: Show aggregate audit
+        run: cat results/REPORT.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ctd-coverage-audit
+          path: results/
+          retention-days: 90
