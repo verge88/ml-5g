@@ -120,41 +120,47 @@ def prepare_captures(z,scratch):
                         stats["benign_marker_remnants"]+=parsed["marker"] is not None
                         if parsed["preface_port"]:ports.add(parsed["preface_port"])
                     write_record(out,item,header)
+    db.execute("CREATE TABLE originals(stamp INTEGER,digest BLOB,label INTEGER,kind TEXT,episode TEXT)")
+    batch=[]
+    for name in mixed:
+        states={}
+        with z.open(name) as original:
+            for item in packets(original):
+                parsed=decode(item[2])
+                if parsed is None:stats["original_non_ipv4_excluded"]+=1;continue
+                labelled=assign_label(parsed,states)
+                if labelled is None:stats["original_marker_packets"]+=1;continue
+                label,kind,episode=labelled
+                batch.append((round(item[0]*1e6),parsed["canonical"],label,kind,name+":"+episode))
+                stats["original_ipv4_indexed"]+=1
+                if len(batch)>=10000:
+                    db.executemany("INSERT INTO originals VALUES(?,?,?,?,?)",batch);batch=[]
+    if batch:db.executemany("INSERT INTO originals VALUES(?,?,?,?,?)",batch)
+    db.execute("CREATE INDEX original_lookup ON originals(digest,stamp)");db.commit()
+    print("Original provenance index built",flush=True)
     frame=0;batch=[];episodes=set()
     with (scratch/"mixed.pcap").open("wb") as out:
         header=[]
-        for name,processed in zip(mixed,mixed_processed):
-            states={}
-            with z.open(name) as original,z.open(processed) as cleaned:
-                def original_records():
-                    for original_item in packets(original):
-                        parsed=decode(original_item[2])
-                        if parsed is None:
-                            stats["original_non_ipv4_excluded"]+=1;continue
-                        labelled=assign_label(parsed,states)
-                        if labelled is None:
-                            stats["original_marker_packets"]+=1;continue
-                        yield original_item,parsed,labelled
-                original_iter=iter(original_records());current=next(original_iter,None)
+        for processed in mixed_processed:
+            with z.open(processed) as cleaned:
                 for item in packets(cleaned):
                     clean=decode(item[2])
                     if clean is None:
                         stats["processed_non_ipv4_excluded"]+=1;continue
-                    while current is not None and current[0][0]<item[0]-.000002:
-                        stats["source_packets_omitted_from_processed"]+=1
-                        stats["omitted_source_protocol_"+str(current[1]["proto"])]+=1
-                        current=next(original_iter,None)
-                    if current is None:raise ValueError("processed packet has no original")
-                    original_item,parsed,labelled=current;frame+=1
-                    if abs(item[0]-original_item[0])>.000002 or clean["canonical"]!=parsed["canonical"]:
-                        raise ValueError("original/processed packet alignment failed")
-                    label,kind,episode=labelled
+                    frame+=1;stamp=round(item[0]*1e6)
+                    matches=db.execute("SELECT DISTINCT label,kind,episode FROM originals WHERE digest=? AND stamp BETWEEN ? AND ? LIMIT 2",
+                        (clean["canonical"],stamp-2,stamp+2)).fetchall()
+                    if len(matches)==1:
+                        label,kind,episode=matches[0];stats["processed_ipv4_with_unique_provenance"]+=1
+                    else:
+                        label,kind,episode=-1,"UNKNOWN",""
+                        stats["unmatched_processed_ipv4" if not matches else "ambiguous_processed_provenance"]+=1
                     if label>=0:
-                        batch.append((frame,label,kind,name+":"+episode,clean["source_mac_hash"],int(clean["checksum_valid"])))
+                        batch.append((frame,label,kind,episode,clean["source_mac_hash"],int(clean["checksum_valid"])))
                         macs[label].add(clean["source_mac_hash"])
                         quality[str(label)]["packets"]+=1
                         quality[str(label)]["invalid_ipv4_checksum"]+=not clean["checksum_valid"]
-                        if label==1:episodes.add((name,kind,episode))
+                        if label==1:episodes.add((kind,episode))
                     else:stats["unknown_mixed_packets"]+=1
                     stats["mixed_processed_packets"]+=1
                     stats["mixed_marker_remnants"]+=clean["marker"] is not None
@@ -162,17 +168,12 @@ def prepare_captures(z,scratch):
                     write_record(out,item,header)
                     if len(batch)>=10000:
                         db.executemany("INSERT INTO labels VALUES(?,?,?,?,?,?)",batch);batch=[]
-                    current=next(original_iter,None)
-                while current is not None:
-                    stats["source_packets_omitted_from_processed"]+=1
-                    stats["omitted_source_protocol_"+str(current[1]["proto"])]+=1
-                    current=next(original_iter,None)
     if batch:db.executemany("INSERT INTO labels VALUES(?,?,?,?,?,?)",batch)
     db.commit()
     return db,dict(packet_counts=dict(stats),checksum_by_label={k:dict(v) for k,v in quality.items()},
         source_mac_counts={str(k):len(v) for k,v in macs.items()},
         source_mac_overlap=len(macs[0]&macs[1]),decoded_marker_episodes=len(episodes),
-        segment_pairing=[dict(original=a,processed=b) for a,b in zip(mixed,mixed_processed)],
+        alignment_method="global timestamp/canonical-content index; transfer only a unique provenance label",
         segment_counts=dict(benign=10,mixed=4),collection_counts=dict(benign=1,mixed=1)),ports
 
 
@@ -280,6 +281,10 @@ def main(scratch,output):
     benign,ambiguous_normal=requests(scratch/"benign.pcap",ports,scratch)
     mixed,ambiguous_mixed=requests(scratch/"mixed.pcap",ports,scratch)
     counts=coverage(benign,mixed,db);db.close()
+    alignment_bad=packet_audit["packet_counts"].get("unmatched_processed_ipv4",0)+packet_audit["packet_counts"].get("ambiguous_processed_provenance",0)
+    if alignment_bad:
+        counts["exploratory_coverage_gate"]=False
+        counts["status"]="ALIGNMENT_INCOMPLETE_COVERAGE_PARTIAL"
     report=dict(protocol=P,archive_md5_verified=True,packet_audit=packet_audit,coverage=counts,
         decoded_benign_requests=len(benign),decoded_mixed_requests=len(mixed),
         ambiguous_request_packets_excluded=dict(benign=ambiguous_normal,mixed=ambiguous_mixed),
