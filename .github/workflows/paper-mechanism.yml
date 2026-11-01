@@ -1,0 +1,95 @@
+name: Controlled TGN mechanism factorial experiment
+on:
+  push:
+    branches: [codex/tgn-mechanism]
+    paths: ['paper5g/mechanism.py', 'paper5g/mechanism-plan.json', 'tests/test_mechanism.py', '.github/workflows/paper-mechanism.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+env:
+  OMP_NUM_THREADS: '2'
+  OPENBLAS_NUM_THREADS: '2'
+  MKL_NUM_THREADS: '2'
+  PYTHONHASHSEED: '0'
+jobs:
+  controls:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - run: python -m pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cpu
+      - run: python -m pytest -q tests/test_mechanism.py tests/test_paper5g.py --junitxml=checks.xml
+      - run: |
+          git rev-parse HEAD > source-commit.txt
+          sha256sum paper5g/mechanism.py paper5g/mechanism-plan.json neural5g/models.py paper5g/engines.py > source-sha256.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mechanism-provenance
+          path: |
+            checks.xml
+            source-commit.txt
+            source-sha256.txt
+            paper5g/mechanism-plan.json
+  mechanism:
+    needs: controls
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        input: [base, context]
+        current: [0, 1]
+        history: [0, 1]
+        drop: [0, 1]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - run: python -m pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cpu
+      - uses: actions/download-artifact@v4
+        with:
+          name: article-full-numeric-data
+          path: prepared
+          run-id: 41096216782
+          github-token: ${{ github.token }}
+      - run: python -m paper5g.mechanism --data prepared --output results --input ${{ matrix.input }} --current ${{ matrix.current }} --history ${{ matrix.history }} --drop ${{ matrix.drop }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mechanism-${{ matrix.input }}-c${{ matrix.current }}-h${{ matrix.history }}-d${{ matrix.drop }}
+          path: results/
+          retention-days: 90
+  report:
+    needs: mechanism
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - run: python -m pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cpu
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: mechanism-*
+          path: inputs
+      - run: python -m paper5g.mechanism --report inputs --output report
+      - run: cat report/REPORT.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mechanism-report
+          path: report/
