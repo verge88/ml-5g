@@ -27,7 +27,13 @@ class Backbone(nn.Module):
         return torch.cat([a,b],1)
 
 def batch(stream,start,end):
-    x=stream['x'];ii=np.arange(start,end)[:,None]-np.arange(16,0,-1)[None,:];valid=ii>=0
+    x=stream['x']
+    if 'history_index' in stream:
+        ii=stream['history_index'][start:end]
+        assert ii.shape==(end-start,16)
+        assert np.all((ii<0)|(ii<np.arange(start,end)[:,None])), 'history contains current/future request'
+    else:ii=np.arange(start,end)[:,None]-np.arange(16,0,-1)[None,:]
+    valid=ii>=0
     v=x[np.maximum(ii,0)].copy();v[~valid]=0;length=valid.sum(1)
     for j,n in enumerate(length):
         if n:v[j,:n]=v[j,-n:].copy()
