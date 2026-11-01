@@ -1,0 +1,29 @@
+{
+  "registered_date": "2026-11-01",
+  "scope": "Offline controlled TGN mechanism experiment on existing deidentified numerical matrices; no attack generation or replay",
+  "baseline_commit": "2f0cf673039e6debfdb18ffeffa1590511e129d9",
+  "preparation_run": 41096216782,
+  "design": "Full factorial 2 x 2 x 2 x 2, separately on two datasets, three fixed initialization seeds. 96 actual fits.",
+  "factors": {
+    "input": ["base", "context"],
+    "current": "1 original readout, 0 zero vector only at current-feature readout; endpoints and historical messages remain available",
+    "history": "1 original TGN observation/memory, 0 never observe messages; learned endpoint embeddings remain",
+    "drop": "0 original negative loss, 1 exclude negative examples with exactly unchanged endpoint pair; keep normal-class loss"
+  },
+  "fixed": "Original protocol: full train/calibration/test, 12 epochs, 512 batch, seeds 11 29 47, 2 CPU threads. Each cell trained from scratch; no inference-only distribution-shift ablation.",
+  "outcomes": "AP and recall/FPR at calibration-only 0.1% and 1%; paired factor differences at identical dataset/seed/other conditions; no test-optimized thresholds, sign flips or best-seed selection",
+  "mechanism_questions": [
+    "Does any gain survive removal of current request readout?",
+    "Does any gain survive removal of dynamic history while retaining endpoint embeddings?",
+    "Does context help specifically when history/current path is enabled?",
+    "Do exact-pair negative collisions change the observed effects?"
+  ],
+  "limits": [
+    "Mechanistic interventions concern this implementation and these fixed datasets, not independent deployments or the cause of actual malicious impact",
+    "Current-off and history-off do not remove endpoint identity embeddings",
+    "Dropping exact-pair collisions does not remove all globally benign negative edges or inconsistent historical attributes",
+    "Context changes input width and parameter count",
+    "Published Granomaly differs in additional architecture details: these interventions cannot uniquely attribute its entire gap",
+    "Already inspected datasets: retrospective analysis; no universal superiority claim"
+  ]
+}
