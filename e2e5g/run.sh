@@ -19,7 +19,11 @@ docker create --name e2e-witness-build e2e-witness-root >/dev/null
 docker cp e2e-witness-build:/boot/vmlinuz-virt vm/vmlinuz-virt
 docker export e2e-witness-build | sudo tar -xf - -C vm/rootfs
 sudo mkdir -p vm/rootfs/dev
-if ! test -e vm/rootfs/dev/console; then sudo mknod -m 600 vm/rootfs/dev/console c 5 1; fi
+if ! test -c vm/rootfs/dev/console; then
+  sudo rm -f -- vm/rootfs/dev/console
+  sudo mknod -m 600 vm/rootfs/dev/console c 5 1
+fi
+test -c vm/rootfs/dev/console
 (cd vm/rootfs && sudo find . -path './boot' -prune -o -print0 | sudo cpio --null -o --format=newc --owner=0:0 --quiet) | gzip -1 > vm/rootfs.cpio.gz
 sha256sum vm/vmlinuz-virt vm/rootfs.cpio.gz > out/guest-image-sha256.txt
 docker pull mongo:7

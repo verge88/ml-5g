@@ -3,6 +3,7 @@ export PATH=/usr/sbin:/usr/bin:/sbin:/bin
 mount -t proc proc /proc
 mount -t sysfs sysfs /sys
 mount -t devtmpfs devtmpfs /dev
+exec </dev/ttyS0 >/dev/ttyS0 2>&1
 mkdir -p /run /tmp
 modprobe virtio_pci || true
 modprobe virtio_net || true
