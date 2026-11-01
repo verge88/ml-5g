@@ -5,7 +5,7 @@ import dpkt,numpy as np,torch
 from cu5g.common import verified,validate_witness
 from joint5g.deep import Net,windows,score
 from joint5g.evaluate import vector
-from .evidence import receipt
+from .evidence import receipt,dnn_result
 
 def metrics(rows,events,alarm):
     normal=np.array([r['stage'] in ['test_normal','test_baseline'] for r in rows]);out=[]
@@ -54,6 +54,9 @@ def run(inputs,modelroot,out):
                 p=verified(json.loads(line),folder/f'{slot}.pub');assert p['mac_checked_before_signing'] is True and p['request']['subject_id']==slot and p['response']['request_nonce']==p['request']['nonce'];nf_count+=1
         ue_logs='\n'.join(p.read_text(errors='replace') for p in (folder/'ue').glob('ue-*.log'))
         assert 'Registration accept received' in ue_logs and 'PDU Session establishment is successful' in ue_logs
+        subscription=json.loads((folder/'live-subscription-controls.json').read_text());denial=subscription['denial']
+        state=dnn_result((folder/f"ue/ue-{denial['attempt']}.log").read_text(errors='replace'))
+        assert state['registered'] and state['denied'] and not state['established'] and receipt(subscription['restored_application'],public,now_ns=subscription['restored_application']['unix_ns'])
         packet=pcap_audit(folder/'ue-user-plane.pcap');witness_count=0
         for mode in complete['modes']:
             p=folder/mode;rows=[json.loads(s) for s in (p/'observations.jsonl').read_text().splitlines()];events=json.loads((p/'events.json').read_text());manifest=json.loads((p/'manifest.json').read_text())
@@ -80,13 +83,13 @@ def run(inputs,modelroot,out):
                 for method,a in [('ml',ml),('full',full),('full_with_application_witness',extended)]:results.append(dict(replica=replica,schedule=mode,model=d['arch'],composition=d['composition'],seed=d['seed'],method=method,**metrics(rows,events,a)))
             np.savez_compressed(out/f'{replica}-{mode}.npz',**arrays)
             schedule.append(dict(replica=replica,schedule=mode,order=manifest['order'],ticks=len(rows),requests=len(req),completed=len(comp),median_cu_seconds=float(np.median(latencies)) if latencies else None,unknown=sum(r['observations']['ausf']['integrity_monitor']['decision']['verdict']=='UNKNOWN' for r in rows),bytes=sum(r['received_bytes'] for r in rows),total_collection_seconds=sum(r['collection_elapsed_ms'] for r in rows)/1000,selected={s:sum(r['selected']==s for r in rows) for s in ['ausf','nssf']},cu_availability=metrics(rows,events,cu),application=metrics(rows,events,app)))
-        evidence.append(dict(replica=replica,verified_application_receipts=valid,verified_nf_signatures=nf_count,verified_runtime_witnesses=witness_count,pcap=packet,guest=public,roles=complete['roles']))
+        evidence.append(dict(replica=replica,verified_application_receipts=valid,verified_nf_signatures=nf_count,verified_runtime_witnesses=witness_count,pcap=packet,guest=public,roles=complete['roles'],live_subscription_control=subscription))
     assert len(evidence)==3 and len(schedule)==9
     report=dict(protocol=json.loads(Path(__file__).with_name('plan.json').read_text()),evidence=evidence,schedules=schedule,results=results,models=[d for d,_ in frozen],new_model_fits_in_evaluation=0,physical_core_deployments=3,physical_fault_episodes=36)
     (out/'results.json').write_text(json.dumps(report,indent=2))
     lines=['# Сквозной лабораторный опыт 5GC','','Три развёртывания полного Open5GS, виртуальные абонент и базовая станция UERANSIM, 36 локальных пауз процессов. Три расписания проверены последовательно внутри каждого развёртывания с чередованием порядка. Это не девять независимых сетей.','',
       'Подписи прикладных квитанций получены в виртуальной машине с отдельным ядром. Трафик прошёл через абонентский туннель и UPF: сохранены журналы регистрации/сеанса и захват на ogstun. Свидетель подтверждает получение прикладного запроса, а не идентичность NF.','',
-      '| Расписание | Запросы / циклы | Завершено КЦ | Медиана времени КЦ, с | UNKNOWN, % |','|---|---:|---:|---:|---:|']
+      '| Расписание | Запросы / циклы | Завершено КЦ | Среднее медиан времени КЦ, с | UNKNOWN, % |','|---|---:|---:|---:|---:|']
     for mode in ['fixed','risk','ml_risk']:
         v=[s for s in schedule if s['schedule']==mode];n=sum(s['ticks'] for s in v);lat=[s['median_cu_seconds'] for s in v if s['median_cu_seconds'] is not None]
         lines.append(f"| {mode} | {sum(s['requests'] for s in v)} / {n} | {sum(s['completed'] for s in v)} | {np.mean(lat) if lat else float('nan'):.3f} | {100*sum(s['unknown'] for s in v)/n:.2f} |")
@@ -95,7 +98,8 @@ def run(inputs,modelroot,out):
     for mode,arch,composition in itertools.product(['fixed','risk','ml_risk'],['mlp','lstm','transformer'],['raw','context']):
         v=[r for r in results if r['schedule']==mode and r['model']==arch and r.get('composition')==composition and r['method']=='full'];counts=[sum(r['detected'] for r in v if r['seed']==seed) for seed in [11,29,47]]
         lines.append(f"| {mode} | {arch} / {composition} | {' / '.join(map(str,counts))} | {100*np.mean([r['fpr'] for r in v]):.4f} |")
-    lines+=['','Ограничения: лаборатория и имитируемый радиоканал; общий физический хост/гипервизор; прежнее удостоверение NF использует NF-происхождение экспорта и охватывает AUSF/NSSF; отрицательные смысловые контроли выполняются офлайн. Проверка производственной сети и реальных несанкционированных семантических операций не выполнена. Подписи новых NF-транскриптов проверяются по открытым ключам; исходные MAC проверялись при сборе, секреты не публикуются.','',
+    lines+=['','На каждом развёртывании после всех оцениваемых испытаний дополнительно проверены штатный отказ зарегистрированному абоненту при запросе DNN вне его подписки и восстановление разрешённой услуги. Это проверка соответствия правилам допуска; она не доказывает обнаружение семантических атак моделью.','',
+      'Ограничения: лаборатория и имитируемый радиоканал; общий физический хост/гипервизор; прежнее удостоверение NF использует NF-происхождение экспорта и охватывает AUSF/NSSF; отрицательные контроли авторизационного договора выполняются офлайн. Проверка производственной сети и реальных несанкционированных семантических операций не выполнена. Подписи новых NF-транскриптов проверяются по открытым ключам; исходные MAC проверялись при сборе, секреты не публикуются.','',
       'Равенство числа запланированных запросов не означает равенства фактических затрат. В results.json сохранены принятые запросы, завершения, байты и время. Модели могут потерять переносимость при изменении расписания и стенда; все результаты публикуются независимо от знака эффекта.']
     (out/'REPORT.md').write_text('\n'.join(lines),encoding='utf-8');print('\n'.join(lines))
 

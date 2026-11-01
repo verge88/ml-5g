@@ -12,7 +12,7 @@ from fullsuite.native_hook import Sampler
 from live5g.capture import observe
 from .configure import generate,subscriber,ROLES
 from .schedule import Scheduler,SLOTS
-from .evidence import receipt
+from .evidence import receipt,dnn_result
 
 OUT=Path('/out');PLAN=json.loads(Path(__file__).with_name('plan.json').read_text())
 
@@ -35,23 +35,52 @@ def key(path):
     return k.public_key().public_bytes(serialization.Encoding.PEM,serialization.PublicFormat.SubjectPublicKeyInfo)
 
 async def vm_start():
-    acceleration='kvm' if os.path.exists('/dev/kvm') and os.access('/dev/kvm',os.W_OK) else 'tcg,thread=multi'
-    cmd=['qemu-system-x86_64','-accel',acceleration,'-m','512','-smp','1','-nographic','-no-reboot','-kernel','/vm/vmlinuz-virt','-initrd','/vm/rootfs.cpio.gz','-append','console=ttyS0 rdinit=/init quiet','-nic','user,model=virtio-net-pci,restrict=on,hostfwd=tcp:10.45.0.1:18081-:8081']
-    log=(OUT/'guest-serial.log').open('w');p=subprocess.Popen(cmd,stdout=log,stderr=subprocess.STDOUT)
+    choices=[('tcg,thread=multi','max')]
+    if os.path.exists('/dev/kvm') and os.access('/dev/kvm',os.W_OK):choices.insert(0,('kvm','host'))
     public=None
-    for _ in range(240):
-        if p.poll() is not None:raise RuntimeError('guest exited: '+(OUT/'guest-serial.log').read_text()[-2500:])
-        try:
-            with urllib.request.urlopen('http://10.45.0.1:18081/public',timeout=.3) as r:public=json.load(r)
-            serial=(OUT/'guest-serial.log').read_text(errors='replace')
-            if public['public_key'] in serial and public['boot_id'] in serial:break
-        except Exception:pass
-        await asyncio.sleep(.5)
-    else:raise RuntimeError('guest receipt witness did not boot')
+    for acceleration,cpu in choices:
+        logpath=OUT/f"guest-{acceleration.split(',')[0]}-serial.log"
+        cmd=['qemu-system-x86_64','-accel',acceleration,'-cpu',cpu,'-m','768','-smp','1','-nographic','-no-reboot','-kernel','/vm/vmlinuz-virt','-initrd','/vm/rootfs.cpio.gz','-append','console=ttyS0,115200 rdinit=/init loglevel=7 earlyprintk=serial,ttyS0,115200 nokaslr','-object','rng-random,filename=/dev/urandom,id=rng0','-device','virtio-rng-pci,rng=rng0','-nic','user,model=virtio-net-pci,restrict=on,hostfwd=tcp:10.45.0.1:18081-:8081']
+        log=logpath.open('w');p=subprocess.Popen(cmd,stdout=log,stderr=subprocess.STDOUT)
+        for _ in range(100):
+            if p.poll() is not None:break
+            try:
+                with urllib.request.urlopen('http://10.45.0.1:18081/public',timeout=.3) as r:candidate=json.load(r)
+                serial=logpath.read_text(errors='replace')
+                if candidate['public_key'] in serial and candidate['boot_id'] in serial:public=candidate;break
+            except Exception:pass
+            await asyncio.sleep(.5)
+        if public is not None:
+            (OUT/'guest-serial.log').write_text(logpath.read_text(errors='replace'));break
+        p.terminate()
+        try:p.wait(timeout=3)
+        except subprocess.TimeoutExpired:p.kill();p.wait()
+        log.close()
+    if public is None:raise RuntimeError('guest receipt witness did not boot; see saved KVM/TCG serial diagnostics')
     host_boot=Path('/proc/sys/kernel/random/boot_id').read_text().strip()
     assert public['boot_id']!=host_boot
     atomic(OUT/'guest-public.json',dict(**public,host_boot_id=host_boot,host_kernel=platform.release(),acceleration=acceleration,source='key pinned against guest serial, not NF export',kernel_sha256=hashlib.sha256(Path('/vm/vmlinuz-virt').read_bytes()).hexdigest(),initrd_sha256=hashlib.sha256(Path('/vm/rootfs.cpio.gz').read_bytes()).hexdigest()))
     return p,public
+
+async def subscription_controls(public):
+    # Ordinary UE subscription conformance, never forged SBI traffic.
+    Path('/control/ue-dnn').write_text('not-subscribed');Path('/control/ue-restart').write_text(secrets.token_hex(8))
+    result=None
+    for _ in range(120):
+        row,_=latest(public)
+        if row and row.get('dnn')=='not-subscribed':
+            path=OUT/f"ue/ue-{row['attempt']}.log"
+            if path.exists():
+                state=dnn_result(path.read_text(errors='replace'))
+                if state['denied']:
+                    result=dict(**state,dnn='not-subscribed',attempt=row['attempt'],application_probe_returncode=row['returncode'],source='ordinary registered UE, DNN absent from its test subscription');break
+        await asyncio.sleep(.25)
+    if result is None:raise RuntimeError('subscription conformance did not produce an explicit DNN denial')
+    assert result['registered'] and not result['established']
+    Path('/control/ue-dnn').write_text('internet');Path('/control/ue-restart').write_text(secrets.token_hex(8))
+    await asyncio.sleep(1.1);restored=await wait_app(public)
+    assert restored['dnn']=='internet'
+    atomic(OUT/'live-subscription-controls.json',dict(denial=result,restored_application=restored,scope='live standard subscription denial and restored permitted service; not semantic attack detection'))
 
 async def collect(mode,order,replica,public,models):
     folder=OUT/mode;folder.mkdir(exist_ok=True);rows=[];events=[];requests=[];completions=[]
@@ -137,6 +166,7 @@ async def run():
         replica=int(os.environ['REPLICA']);modes=list(PLAN['schedules']);shift=(replica-901)%3;modes=modes[shift:]+modes[:shift]
         models=json.loads(Path('/models/risk-models.json').read_text())['models']
         for order,mode in enumerate(modes):await collect(mode,order,replica,public,models)
+        await subscription_controls(public)
         atomic(OUT/'complete.json',dict(replica=replica,modes=modes,source_commit=os.environ['SOURCE_COMMIT'],roles=ROLES,guest_distinct_kernel=True,physical_separate_host=False,production=False,semantic_attacks=False))
     finally:
         Path('/control/done').touch()

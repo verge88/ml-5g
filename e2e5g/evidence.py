@@ -2,6 +2,11 @@
 import base64,json,time
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
+def dnn_result(log):
+    return dict(registered='Registration accept received' in log,established='PDU Session establishment is successful' in log,
+        denied='DNN_NOT_SUPPORTED_OR_NOT_SUBSCRIBED' in log or 'PDU Session Establishment Reject received' in log,
+        denial_cause='DNN_NOT_SUPPORTED_OR_NOT_SUBSCRIBED' if 'DNN_NOT_SUPPORTED_OR_NOT_SUBSCRIBED' in log else ('PDU_SESSION_ESTABLISHMENT_REJECT' if 'PDU Session Establishment Reject received' in log else None))
+
 def receipt(row,public,now_ns=None):
     if row is None or row.get('returncode')!=0:return False
     if row.get('interface')!='uesimtun0':return False

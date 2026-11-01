@@ -2,7 +2,7 @@ import base64,copy,json
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from e2e5g.schedule import Scheduler,predict,raw_features
-from e2e5g.evidence import receipt
+from e2e5g.evidence import receipt,dnn_result
 from e2e5g.controls import cases
 import pytest
 
@@ -31,3 +31,7 @@ def test_public_receipt_binding_tamper_and_age():
 
 def test_authorization_contract_never_promotes_missing_context():
     report=cases();assert len(report['cases'])==14 and report['passed']
+
+def test_live_subscription_denial_has_two_standard_observation_forms():
+    for text in ['MM status received with cause [DNN_NOT_SUPPORTED_OR_NOT_SUBSCRIBED]','PDU Session Establishment Reject received [MISSING_OR_UNKNOWN_DNN]']:
+        s=dnn_result('Registration accept received\n'+text);assert s['registered'] and s['denied'] and not s['established']
