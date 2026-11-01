@@ -10,6 +10,7 @@
   "baseline_ticks": 8,
   "fault_ticks": 12,
   "recovery_ticks": 10,
+  "boundary_recovery": "After each fixed ten-tick recovery window, uniformly restart only test SMF/UPF and UE outside scored windows and require a fresh signed receipt from the new UE attempt. Record actions, time and pre-reset application state. This is manual experimental reset, not autonomous recovery.",
   "local_faults": ["ausf", "nssf", "smf", "upf"],
   "cu_budget_per_tick": 1,
   "max_cu_age_ticks": 4,

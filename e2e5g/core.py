@@ -82,8 +82,29 @@ async def subscription_controls(public):
     assert restored['dnn']=='internet'
     atomic(OUT/'live-subscription-controls.json',dict(denial=result,restored_application=restored,scope='live standard subscription denial and restored permitted service; not semantic attack detection'))
 
+async def boundary_restore(public,episode):
+    # Uniform manual reset AFTER the fixed observed recovery window. A resumed
+    # SMF/UPF need not re-associate after a heartbeat timeout; do not call this
+    # automatic recovery, and never include the reset in the scored fault.
+    began=time.monotonic_ns();old,old_ok=latest(public);old_attempt=old['attempt'] if old else -1
+    before={s:driver.PROCS[s].pid for s in ['smf','upf']}
+    for s in ['smf','upf']:driver.stop(s)
+    for s in ['upf','smf']:driver.start(s)
+    await asyncio.sleep(2)
+    Path('/control/ue-restart').write_text(secrets.token_hex(8))
+    for i in range(180):
+        row,ok=latest(public)
+        if ok and row['attempt']>old_attempt:
+            return dict(episode=episode,start_ns=began,end_ns=time.monotonic_ns(),outside_scored_windows=True,
+                application_at_fixed_recovery_end=old_ok,old_pids=before,new_pids={s:driver.PROCS[s].pid for s in before},
+                actions=['restart_smf','restart_upf','restart_test_ue'],restored_application=row,
+                scope='uniform experiment boundary reset, not autonomous core recovery')
+        if i in [30,90]:Path('/control/ue-restart').write_text(secrets.token_hex(8))
+        await asyncio.sleep(.5)
+    raise RuntimeError('uniform manual boundary reset did not restore the test session')
+
 async def collect(mode,order,replica,public,models):
-    folder=OUT/mode;folder.mkdir(exist_ok=True);rows=[];events=[];requests=[];completions=[]
+    folder=OUT/mode;folder.mkdir(exist_ok=True);rows=[];events=[];requests=[];completions=[];boundaries=[]
     sampler=Sampler(StreamRelationalVerifier(POLICY),FreshnessAnchor(folder/'controller-anchor.json'))
     sampler.cycle=10000*(order+1);sampler.last_issue=1e30
     scheduler=Scheduler(mode,models,PLAN['max_cu_age_ticks']);tick=0
@@ -131,7 +152,8 @@ async def collect(mode,order,replica,public,models):
         finally:os.kill(pid,signal.SIGCONT)
         events.append(dict(episode=ep,slot=s,kind='authorized_local_pause',split='test',start_tick=start_tick,end_tick=tick,start_ns=start_ns,end_ns=time.monotonic_ns(),ue_restart=s in ['ausf','smf']))
         if s in ['ausf','smf']:(Path('/control')/'ue-restart').write_text(secrets.token_hex(8))
-        await sample('test_recovery',PLAN['recovery_ticks'],ep);await wait_app(public)
+        await sample('test_recovery',PLAN['recovery_ticks'],ep)
+        boundaries.append(await boundary_restore(public,ep));atomic(folder/'boundary-recovery.json',boundaries)
     atomic(folder/'events.json',events);atomic(folder/'cu-requests.json',requests);atomic(folder/'cu-completions.json',completions)
     atomic(folder/'bound-observations.json',sampler.bound_evidence)
     atomic(folder/'manifest.json',dict(replica=replica,mode=mode,order=order,rows=len(rows),cu_requests=len(requests),cu_completions=len(completions),plan_sha256=hashlib.sha256(Path(__file__).with_name('plan.json').read_bytes()).hexdigest(),risk_models_sha256=hashlib.sha256(Path('/models/risk-models.json').read_bytes()).hexdigest(),source_commit=os.environ['SOURCE_COMMIT'],event_labels_available_to_scheduler=False,period_seconds=PLAN['period_seconds'],scheduled_budget_per_tick=1))
