@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "registered_date": "2026-11-01",
+  "open5gs": "d9d3abdd480be96fac3bc8a997e83446648763ca",
+  "ueransim": "1d1e154f869260b5e98f6905827b1bd9b8663afc",
+  "replicas": [901, 902, 903],
+  "schedules": ["fixed", "risk", "ml_risk"],
+  "period_seconds": 1.0,
+  "normal_ticks": 36,
+  "baseline_ticks": 8,
+  "fault_ticks": 12,
+  "recovery_ticks": 10,
+  "local_faults": ["ausf", "nssf", "smf", "upf"],
+  "cu_budget_per_tick": 1,
+  "max_cu_age_ticks": 4,
+  "risk_model_seed": 11,
+  "training_deployments": [701,702,801,802,803,804,805,806],
+  "primary": "Describe complete live results without success-driven model selection. Compare fixed/risk/ml_risk at one two-NF CU challenge per tick; report actual counts, bytes, time, missing evidence and fault detection. Application-path outages are separate from two-NF integrity results.",
+  "semantic_controls": "Offline authorized-context invariant tests only. Never send forged semantic operations to any core. These tests are not evidence of real semantic-attack detection.",
+  "trust": "Guest generates its own signing key. Guest has a distinct Linux kernel, no host filesystem, and no NF runtime export. It signs application nonces delivered through the UE session. This witnesses application-path receipt, not NF UUID identity. Same physical host/hypervisor remains trusted. NF agents add public detached signatures while retaining original live KIE MAC checks.",
+  "deployment": "Internal Docker network only, test PLMN999/70, test subscription, simulated radio link, no production or external network traffic. Full core includes NRF/AUSF/NSSF/UDM/UDR/PCF/BSF/AMF/SMF/UPF and MongoDB.",
+  "limits_remaining": ["No operator infrastructure or permission available", "No physical separate witness host", "No live unauthorized semantic operations", "CU identity coverage remains AUSF/NSSF", "Minutes of correlated normal data, not a production false-alarm certificate"]
+}
