@@ -1,0 +1,16 @@
+#!/bin/sh
+export PATH=/usr/sbin:/usr/bin:/sbin:/bin
+mount -t proc proc /proc
+mount -t sysfs sysfs /sys
+mount -t devtmpfs devtmpfs /dev
+exec </dev/ttyS0 >/dev/ttyS0 2>&1
+mkdir -p /run /tmp
+modprobe virtio_pci || true
+modprobe virtio_net || true
+modprobe virtio_rng || true
+modprobe e1000 || true
+ip link set lo up
+ip link set eth0 up
+ip addr add 10.0.2.15/24 dev eth0
+ip route add default via 10.0.2.2
+exec python3 /guest.py
