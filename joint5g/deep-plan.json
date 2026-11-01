@@ -1,0 +1,12 @@
+{
+ "date":"2026-11-01",
+ "design":"MLP48-24 vs LSTM32 vs Transformer32,2heads,1layer; raw12 vs context28; windows16/32 for sequence nets,1 for MLP; seeds11/29/47. Thirty fits,18 selected models.",
+ "split":"Old701/702 train(stop examples only), old704/705/706 now development, old703 normal calibration. Fresh707/708/709 are the final held-out deployments; no model/threshold/seed selection using them.",
+ "selection":"One window per architecture/composition minimizing mean unweighted binary cross-entropy over all development runs and all3seeds, with shorter-window tie break. No epoch selection:24 fixed AdamWlr.001weight_decay.001,64batch,clip5,positive-class weight from training prevalence. Every result retained.",
+ "causality":"Window includes current observed cycle and strictly preceding cycles, no future; reset at deployment boundaries, right padding masked. Scaler fit only on normal training. No labels, stage, tick, replica, UUID, nonce or signature in features. Explicit unknown evidence states retained.",
+ "threshold":"Maximum normal calibration score, frozen before test job opens new records. Actual FPR0.1% target, no guarantee under shift. Report ML and full OR fusion separately; do not suppress integrity alarm or convert UNKNOWN to confirmed.",
+ "primary":"LSTM/context/full versus MLP/context/full on12 physical new test episodes. Operational improvement requires detection>=9/12 and observed FPR<=.001 on EACH test deployment in EACH seed, plus comparison at disclosed actual FPR. Transformer is predefined secondary comparator, not post-hoc substitute for failed primary.",
+ "scope":"Same isolated native NRF/AUSF/NSSF laboratory; new run keys and UUIDs. Local stop/pause availability faults, not malicious semantic attacks. Passive offline evaluation of bound live observations, not adaptive query scheduling or production validation.",
+ "controls":"Original nine defensive controls remain separate from availability metrics. No exploit, malicious protocol mutation or traffic replay.",
+ "limitations":"Only3fresh test deployments with same code/fault plan and minutes of normal data; seeds/windows do not increase physical sample size. No success required. Earlier data now openly used for development, not claimed untouched. New baseline optimizer/budget is standardized PyTorch and not a reproduction of previous sklearn MLP results."
+}
