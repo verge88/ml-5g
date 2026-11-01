@@ -20,6 +20,7 @@ class Sampler:
         self.verifier,self.anchor=verifier,anchor
         self.latest={};self.keys={s:Path(f"/nfkeys/{s}.key").read_bytes() for s in POLICY.slots}
         self.cycle=10000;self.last_issue=-1e30;self.challenge=None;self.accepted=set();self.evidence=[]
+        self.bound_evidence=[]
 
     def observe(self,observations):
         now=time.monotonic();profiles={}
@@ -70,6 +71,11 @@ class Sampler:
         monitor={"states":states,"decision":decision,"hard_alarm":hard,
                  "witness_available":bundle is not None,"current_request_cycle":self.cycle,
                  "confirmed":decision["verdict"]=="CONFIRMED_MATCH_IN_DECLARED_SCOPE"}
+        observation_id=f"{os.environ.get('REPLICA','local')}:{len(self.bound_evidence)}"
+        monitor['observation_id']=observation_id
+        self.bound_evidence.append(dict(observation_id=observation_id,observed_unix_ns=time.time_ns(),
+            witness=bundle,challenge=self.challenge,profiles=normalized,states=dict(states),decision=decision,
+            hard_alarm=hard,confirmed=monitor['confirmed'],current_request_cycle=self.cycle))
         for slot in POLICY.slots:observations[slot]["integrity_monitor"]=monitor
         self.challenge={"cycle":self.cycle,"nonce":secrets.token_hex(16),"policy_sha256":POLICY.digest}
         atomic("/control/witness-request.json",self.challenge)
@@ -104,6 +110,7 @@ async def run():
         manifest.update(provenance("native_capture"),commit=os.environ["SOURCE_COMMIT"],full_cu_witness_status="per-observation integrity_monitor",native_cu_request_period_seconds=P["native_cu_request_period_seconds"])
         atomic(output/"capture-manifest.json",manifest)
         atomic("/out/sampler-accepted-cus.json",sampler.evidence)
+        atomic("/out/sampler-bound-observations.json",sampler.bound_evidence)
         # Shared response anchor and monotonically higher final cycle preserve
         # anti-replay after the continuous sampler has consumed newer CUs.
         return await original_cycle(sampler.cycle+1,label,verifier,anchor)

@@ -1,0 +1,22 @@
+{
+  "date": "2026-11-01",
+  "scope": "New isolated native NRF/AUSF/NSSF deployments, original CU transport verifier plus signed runtime witness plus ML on the same monitoring-cycle records; not an end-to-end UE/SMF semantic-attack experiment",
+  "train_deployments": [701,702],
+  "calibration_deployments": [703],
+  "test_deployments": [704,705,706],
+  "model_seeds": [11,29,47],
+  "alpha": 0.001,
+  "threshold": "Maximum normal calibration score; frozen with model before loading any test record. No test selection. Actual FPR reported, not guaranteed by the nominal target.",
+  "capture": "Existing fullsuite.native_hook on fresh Open5GS v2.7.6 builds, independent run-specific keys and native UUIDs, original live5g capture plan: normal stages, authorized restarts, local stop/pause availability faults. No malicious protocol mutation or traffic replay.",
+  "training": "IsolationForest200trees trained only on normal records from701/702; MLP48-24,max_iter300,StandardScaler fit on training normal records; supervised MLP uses only fit/calibration normal and train_baseline/train_fault intervals from701/702, so training sees stop faults, not pause faults. Recovery and later test_* stages on training runs excluded from model fitting.",
+  "calibration": "703 normal stages only; no test faults or test deployment data used. Normal = fit_normal, calibration_normal, test_normal, train_baseline, test_baseline. Recovery reported separately, not called normal or malicious.",
+  "inputs": "Per-cycle network features: six direct/discovery timing/availability/profile summaries per NF, concatenated for AUSF and NSSF. Context adds observed per-NF CU state categories and witness availability/confirmation/integrity status. Stage, tick, event labels, replica ID, raw UUIDs, nonce, signature bytes and wall-clock timestamps are not model inputs.",
+  "unit": "One monitoring cycle covering both monitored functions. Fault truth means either monitored local process is under the independently recorded active intervention interval. Metadata labels used only for fitting supervised training faults and evaluation, not feature extraction.",
+  "methods": ["integrity_only","ml_raw","ml_context","full_raw","full_context"],
+  "fusion": "Full = integrity hard alarm OR frozen ML alarm; integrity UNKNOWN remains UNKNOWN in a separate status and is never converted to confirmed integrity by low ML score. ML cannot suppress a verifier alarm. Context does not synthesize success from missing evidence.",
+  "primary_comparison": "MLP full_context versus integrity_only and MLP ml_raw on the same three held-out deployments; all seeds reported. Report fault episode detection and delay, normal FPR and unknown coverage; comparisons at unequal actual FPR are not described as matched-FPR superiority.",
+  "evidence": "Every observation carries deployment-local observation_id binding the exact verified witness/challenge/profile states used by the monitor. Save exact accepted CU pairs separately, public keys, source hashes and verifier identity. Signer runs separately and does not read NRF; it shares host/kernel and reads NF-produced runtime export, so independence is limited.",
+  "controls": "Nine original native-CU defensive controls run as separate offline-copy/authentication checks; not counted as live cyberattacks or pooled with availability fault metrics. No example from controls is used to train ML.",
+  "scientific_success": "No positive outcome required. Same records must support recomputation of every detector. Must verify no alarm suppression, no false confirmed status on missing witness, and fixed train/cal/test deployment separation.",
+  "limitations": ["Only NRF and two NF types, not complete production 5GC", "Local availability interventions are not malicious semantic attacks", "Normal collection lasts minutes, insufficient to certify rare production FPR", "Three model seeds do not add independent deployments", "No externally controlled subscriber traffic or privilege exploitation"]
+}
