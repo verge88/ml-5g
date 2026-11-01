@@ -1,0 +1,20 @@
+{
+  "date": "2026-11-01",
+  "parent_commit": "1a2e0e0ed4ff3afcef7502b05d632372a5ec8782",
+  "scope": "Offline retrospective context acquisition feasibility and controlled history-scope experiment; no live traffic or exploitation",
+  "requested_compositions": ["Current vectors", "Vectors with true procedure history", "Procedure history with request-bound verification observations"],
+  "available_compositions": ["Current vectors", "Global preceding 16 requests", "Preceding 16 requests of the actual directional endpoint pair", "Preceding 16 requests of a directional transport connection with observed SYN generation"],
+  "unavailable": ["No true cross-function procedure identifiers in published decoded captures", "No request-bound CU/runtime witness observations for these captures", "Existing native-CU signed witnesses concern different deployments and must not be joined"],
+  "design": "3 original objectives x 4 available arms x 3 fixed seeds = 36 fits; Granomaly only, all eligible test rows, no resampling or cap",
+  "data": "Original pinned public CSVs aligned bitwise to Granomaly matrices from Actions run 41096216782; original splits, labels, normalization and base operation coding unchanged",
+  "input": "Common 83-dimensional input: 77 original base dimensions and six reserved observation dimensions (three check values and three availability masks). All reserved dimensions zero in the present four-arm experiment. Every arm has the same architecture and initialized parameter shapes.",
+  "training": "Common projection/GRU 48 and original three output heads; original permutation, categorical forecast and MSE reconstruction objectives unchanged to isolate grouping. 12 epochs, 512 batch, AdamW lr .001 weight_decay .0001, clip 5, two CPU threads, seeds 11/29/47. Current vectors already include causal count/gap summaries.",
+  "causality": "History contains only strictly earlier row indices; partitions reset histories; no current/future request or response enters model vectors. Transport/procedure IDs are grouping keys only, not features. Unknown endpoints do not share histories merely because their model vocabulary ID is zero.",
+  "observations": "Optional pinned P-256 collector signature binding capture SHA256, deployment ID, request index and pre-request observation time (age <=5 seconds). Missing checks have availability mask zero, not pass. Complete alignment across every partition required to enable procedure/procedure_witness training. No check value is synthesized from labels or normal assumptions. A collector signature authenticates assertions, not physical measurement independence.",
+  "primary": "SMF: 706 original positive requests and 2509 original normal requests with known endpoints. Score full streams before applying strata. Original scenario labels are not independently verified malicious outcomes.",
+  "thresholds": "Calibration-only empirical upper quantiles .001/.01, frozen before any test. Primary budget requires actual SMF and clean-holdout FPR <=.001 in all three seeds. No post-hoc polarity, threshold or seed selection.",
+  "report": "Full and known-participant AP, recall, actual FPR, TP/FP, clean FPR, conditional 512-request block intervals (200 replicates), false alarms per capture hour. Pairwise scope contrasts use matched seeds; not independent deployments. Source-annotation and response summaries audit-only, no relabelling.",
+  "independent_new_deployments": 0,
+  "full_requested_three_composition_test": "Unavailable pending actual procedure and verification observations; transport histories are explicitly a proxy experiment, never claimed as that test",
+  "scientific_success_not_required": true
+}

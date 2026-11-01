@@ -62,7 +62,7 @@ def family(path):
     return "other"
 
 
-def read_csv(path):
+def read_csv(path, retain_correlation=False):
     requests, replies = [], defaultdict(list)
     generation = Counter()
     skipped = 0
@@ -90,6 +90,9 @@ def read_csv(path):
         r["status"] = matches[0][1] if len(matches) == 1 and occurrences[r["key"]] == 1 else None
         r["response_correlation"] = "UNIQUE" if r["status"] is not None else "UNKNOWN"
         r["family"] = family(r["path"])
+        if retain_correlation:
+            # Transport connection only; this is NOT an end-to-end procedure ID.
+            r['transport_key'] = r['key'][:-1]
         r.pop("key")
     return requests, skipped
 
