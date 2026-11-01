@@ -1,5 +1,5 @@
 import numpy as np
-from joint5g.evaluate import combine,vector,metrics
+from joint5g.evaluate import combine,vector,metrics,bound_index
 
 def observation():
     monitor=dict(states=dict(ausf='AUTHENTICATED_CURRENT_CU',nssf='PENDING_CURRENT_CU'),witness_available=False,confirmed=False,hard_alarm=False,decision=dict(verdict='UNKNOWN'),observation_id='not-a-feature')
@@ -7,6 +7,11 @@ def observation():
 
 def test_fusion_never_suppresses_integrity_alarm():
     hard=np.array([True,False,True,False]);ml=np.array([False,True,True,False]);np.testing.assert_array_equal(combine(hard,ml),[True,True,True,False])
+
+def test_readiness_probes_do_not_break_exact_sample_binding():
+    records=[dict(observations=dict(ausf=dict(integrity_monitor=dict(observation_id='701:2'))))]
+    index=bound_index(records,[dict(observation_id='701:0'),dict(observation_id='701:1'),dict(observation_id='701:2')])
+    assert index['701:2']['observation_id']=='701:2'
 
 def test_features_exclude_ids_truth_and_scheduling():
     a=observation();raw,context=vector(a);a['ausf']['integrity_monitor']['observation_id']='test-fault-704'

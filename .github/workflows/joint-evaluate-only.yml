@@ -1,0 +1,82 @@
+name: Evaluate the pinned new native deployment captures
+on:
+  push:
+    branches: [codex/joint-native-ml]
+    paths: ['joint5g/evaluate.py', 'tests/test_joint5g.py', '.github/workflows/joint-evaluate-only.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+env:
+  OMP_NUM_THREADS: '1'
+  OPENBLAS_NUM_THREADS: '1'
+  MKL_NUM_THREADS: '1'
+jobs:
+  controls:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt cryptography==44.0.2 h2==4.2.0
+      - run: python -m pytest -q tests/test_joint5g.py tests/test_cu5g.py --junitxml=checks.xml
+      - run: |
+          git rev-parse HEAD > source-commit.txt
+          sha256sum joint5g/*.py joint5g/protocol.json fullsuite/native_hook.py cu5g/common.py cu5g/driver.py hybrid/vendor/stage39_kie.py > source-sha256.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: joint-evaluation-provenance
+          path: |
+            checks.xml
+            source-commit.txt
+            source-sha256.txt
+            joint5g/protocol.json
+  evaluate:
+    needs: controls
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt cryptography==44.0.2 h2==4.2.0
+      - name: Wait for the six original collection jobs without repeating physical runs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import json,os,time,urllib.request
+          url='https://api.github.com/repos/verge88/ml-5g/actions/runs/41312205121/jobs?per_page=100'
+          expected={f'native ({i})' for i in [701,702,703,704,705,706]}
+          for _ in range(90):
+              req=urllib.request.Request(url,headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'})
+              with urllib.request.urlopen(req,timeout=30) as r:jobs=json.load(r)['jobs']
+              selected=[j for j in jobs if j['name'] in expected]
+              if any(j['status']=='completed' and j['conclusion']!='success' for j in selected):raise RuntimeError('Native collection failed; do not substitute synthetic captures')
+              done=sum(j['conclusion']=='success' for j in selected)
+              print('Completed native deployments:',done,'/6',flush=True)
+              if done==6:break
+              time.sleep(10)
+          else:raise RuntimeError('Native collection deadline')
+          PY
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: joint-native-*
+          path: inputs
+          run-id: 41312205121
+          github-token: ${{ github.token }}
+      - run: python -m joint5g.evaluate --input inputs --output results
+      - run: cat results/REPORT.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: joint-evaluation
+          path: results/
+          retention-days: 90

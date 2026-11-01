@@ -17,6 +17,14 @@ NORMAL={'fit_normal','calibration_normal','test_normal','train_baseline','test_b
 
 def combine(hard,ml):return np.asarray(hard,dtype=bool)|np.asarray(ml,dtype=bool)
 
+def bound_index(records,bound):
+    # Readiness and recovery probes also invoke the sampler; they are not scored.
+    assert len(bound)>=len(records)
+    index={r['observation_id']:r for r in bound};assert len(index)==len(bound)
+    ids=[r['observations']['ausf']['integrity_monitor']['observation_id'] for r in records]
+    assert len(set(ids))==len(ids) and all(i in index for i in ids)
+    return index
+
 def vector(observations):
     raw=[];context=[]
     for slot in ['ausf','nssf']:
@@ -29,8 +37,8 @@ def vector(observations):
 def read_run(folder,replica):
     manifest=json.loads((folder/'native/capture-manifest.json').read_text());assert manifest['replica']==replica
     records=[json.loads(v) for v in (folder/'native/observations.jsonl').read_text().splitlines()]
-    events=json.loads((folder/'native/events.json').read_text());bound=json.loads((folder/'sampler-bound-observations.json').read_text());assert len(bound)==len(records)
-    index={r['observation_id']:r for r in bound};assert len(index)==len(bound);raw=[];context=[];normal=[];truth=[];hard=[];unknown=[];train=[];rows=[];recovery=[]
+    events=json.loads((folder/'native/events.json').read_text());bound=json.loads((folder/'sampler-bound-observations.json').read_text())
+    index=bound_index(records,bound);raw=[];context=[];normal=[];truth=[];hard=[];unknown=[];train=[];rows=[];recovery=[]
     signature_checks=0
     for r in records:
         obs=r['observations'];m=obs['ausf']['integrity_monitor'];assert m==obs['nssf']['integrity_monitor']

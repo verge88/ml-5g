@@ -1,7 +1,7 @@
 name: Bound native CU witness and ML across independent deployments
 on:
   push:
-    branches: [codex/joint-native-ml]
+    branches: [codex/joint-native-capture]
     paths: ['joint5g/**', 'fullsuite/native_hook.py', 'tests/test_joint5g.py', '.github/workflows/joint-native-ml.yml']
   workflow_dispatch:
 permissions:
