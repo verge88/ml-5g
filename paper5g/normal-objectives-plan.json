@@ -1,0 +1,21 @@
+{
+  "date": "2026-11-01",
+  "scope": "Offline retrospective normal-only objective comparison; no attacks, exploitation or traffic replay",
+  "parent_commit": "ee2dfa3c92a46664835b87302d96ebb1f73b5c02",
+  "data_run": 41096216782,
+  "design": "Three goals x three information modes x two datasets x three seeds = 54 fits on complete existing matrices",
+  "goals": {
+    "permutation": "Original within-batch independent endpoint permutations, balanced normal/synthetic-negative binary cross entropy. No added negatives in history.",
+    "next": "Predict current operation method/service/resource categories from strictly preceding requests and, when allowed, non-operation current metadata. Current target fields are always zeroed. Three categorical cross entropies; no attack class.",
+    "masked": "Reconstruct hidden feature blocks: method, service, resource, wire/timing/counts. Four fixed full-block masks, equal mean squared error. Endpoint identities are never reconstruction targets. No attack class."
+  },
+  "modes": {"current":"Current request only", "history":"Strictly preceding 16 requests only", "joint":"Current request plus preceding 16 requests"},
+  "backbone": "Same initialized input projection 48, GRU 48, output heads for all cells. Inactive branches/heads retained; primary contrasts are within this common backbone, not a reproduction of original TGN.",
+  "training": "Normal training only, 12 epochs, batch 512, AdamW lr .001 weight decay .0001, clip 5, seeds 11/29/47, two CPU threads. Base features only, original train-only normalization and vocabulary unchanged.",
+  "primary_test": "Granomaly SMF known-endpoint stratum: 706 positive requests, all eligible known-endpoint normals. Score full streams first, stratify metrics afterwards without altering history.",
+  "thresholds": "Freeze calibration-only upper empirical quantiles for .001 and .01 before testing. Same thresholds apply to full and known strata. No test-optimized polarity or seed/model selection.",
+  "report": "AP, recall, actual FPR, TP/FP, clean-holdout FPR, 512-request 200-replicate conditional block intervals; clean false alarms per observed capture hour. Three seeds are not independent deployments.",
+  "independent_new_deployments": 0,
+  "legitimate_new_instance_capture": "Unavailable. Three normal NRF requests with unknown endpoints lack independent evidence of legitimate instance replacement; not treated as an independent deployment or a verified lifecycle scenario.",
+  "limitations": ["Already inspected datasets and known SMF strata: adaptive retrospective research", "No new real-world collection or proof of malicious impact", "Common GRU/MLP backbone isolates goals but does not establish superiority over published TGN architecture", "Time-normalized alarms describe trace duration, not production operation", "All normal-label unknown-participant diagnostics retain original unverified labels"]
+}
