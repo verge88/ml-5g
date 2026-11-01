@@ -1,0 +1,14 @@
+{
+ "date":"2026-11-01",
+ "scope":"Broader supervised learning on linked native Open5GS availability observations; no attacks, exploitation or replay",
+ "train_deployments":[701,702,801,802,803,804,805,806],
+ "calibration_deployments":[809,810],
+ "test_deployments":[811,812,813],
+ "capture":"Eleven fresh isolated deployments. Fit600, calibration150, normal_test300, baseline16, recovery16 ticks;4training interventions (stop/pause, both NFs) plus4test interventions. Training periods0.3/0.45/0.6seconds and fault lengths8/12/20ticks; calibration periods0.35/0.55; new test0.3/0.45/0.6 and12fault ticks. Signed collector metadata records actual override config, original file protocol hash is not substituted for runtime configuration.",
+ "expected_training":"496 old rows ->5700 broad rows:5332normal,368positive,8deployments versus2. Counts must be checked from actual records. Pauses are now training examples; no unseen-pause generalization claim.",
+ "expected_calibration":"2356 normal cycles from two new deployments, versus372 previously. Common calibration maximum for all arms, frozen before opening final records. Old weights/scalers unchanged but thresholds intentionally recalibrated; not claimed identical old operating points.",
+ "design":"Fixed previous selected windows: MLP1,LSTMraw32/LSTMcontext16,Transformer16. Seeds11/29/47. Three arms: retained old weights; expanded24epoch training; expanded192updates matching previous training update count approximately.36new fits plus18retained models,54evaluated models. No new hyperparameter or test selection.",
+ "training":"AdamWlr.001,weight_decay.001,batch<=64,positive-weight BCE,clip5,normal-only scaler. Seeded shuffled windows; within-window chronology and deployment boundaries preserved. Full broad training24epochs; equal-update control192steps. Larger training changes both data volume and fault variety; no pure sample-count causal claim.",
+ "primary":"LSTM/context/full broad_full versus old_weights on common calibration and same12fresh physical test episodes. Target>=9/12 in each seed and FPR<=.001 on every test deployment/seed. Report all methods and both ML-only/full fusion regardless of success.",
+ "limits":"Same NRF/AUSF/NSSF code and local laboratory faults, no production5GC, no semantic attack validation, no adaptive acquisition scheduler. Seeds and overlapping windows do not increase physical independence. Normal duration is minutes, not an operational rare-event guarantee. Success not required."
+}
