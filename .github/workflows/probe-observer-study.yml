@@ -1,0 +1,86 @@
+name: Registered queue intervention and probe scheduling study
+on:
+  push:
+    branches: [codex/probe-observer-study]
+    paths: ['probe_study/**', '.github/workflows/probe-observer-study.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  OMP_NUM_THREADS: '1'
+  OPENBLAS_NUM_THREADS: '1'
+jobs:
+  fit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install numpy==2.2.6
+      - run: python -m unittest probe_study.test_study -v
+      - name: Fit on development seeds only and freeze model
+        run: python -m probe_study.study --stage fit --output frozen
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frozen-probe-model
+          path: frozen/
+          retention-days: 90
+  test:
+    needs: fit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        start: [2001, 2021, 2041]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install numpy==2.2.6
+      - uses: actions/download-artifact@v4
+        with:
+          name: frozen-probe-model
+          path: frozen
+      - name: Evaluate frozen model in causal closed-loop simulations
+        run: python -m probe_study.study --stage evaluate --models frozen --start ${{ matrix.start }} --count 20 --output out
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: probe-test-${{ matrix.start }}
+          path: out/
+          retention-days: 90
+  report:
+    needs: test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install numpy==2.2.6
+      - uses: actions/download-artifact@v4
+        with:
+          name: frozen-probe-model
+          path: frozen
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: probe-test-*
+          path: inputs
+      - run: python -m probe_study.study --stage aggregate --models frozen --input inputs --output results
+      - run: cat results/REPORT.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: probe-observer-final
+          path: results/
+          retention-days: 90
