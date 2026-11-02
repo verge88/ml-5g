@@ -1,0 +1,122 @@
+name: Diagnostic observability and offline budgeted replay on private5GC
+on:
+  push:
+    branches: [codex/diagnostic-observability]
+    paths: ['diagnose5g/**','tests/test_diagnose5g.py','.github/workflows/diagnose5g.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+env:
+  OMP_NUM_THREADS: '1'
+  OPENBLAS_NUM_THREADS: '1'
+  MKL_NUM_THREADS: '1'
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt cryptography==44.0.2 h2==4.2.0
+      - run: python -m pytest -q tests/test_diagnose5g.py tests/test_forecast5g.py tests/test_e2e5g.py tests/test_cu5g.py --junitxml=checks.xml
+      - run: |
+          git rev-parse HEAD > source-commit.txt
+          find diagnose5g forecast5g e2e5g cu5g -maxdepth 1 -type f -print0 | sort -z | xargs -0 sha256sum > source-sha256.txt
+          sha256sum fullsuite/native_hook.py hybrid/vendor/stage39_kie.py >> source-sha256.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: diagnostic-plan
+          path: |
+            diagnose5g/plan.json
+            checks.xml
+            source-commit.txt
+            source-sha256.txt
+          retention-days: 90
+  fit:
+    needs: native
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt cryptography==44.0.2 h2==4.2.0
+      - run: python -m pip check
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: diagnostic-native-130[1-4]
+          path: inputs
+      - name: Fit and freeze without downloading test deployments
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: python -m diagnose5g.train --input inputs --output models
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: diagnostic-models
+          path: models/
+          retention-days: 90
+  evaluate:
+    needs: fit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt cryptography==44.0.2 h2==4.2.0
+      - run: python -m pip check
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: diagnostic-native-130[5-6]
+          path: inputs
+      - uses: actions/download-artifact@v4
+        with:
+          name: diagnostic-models
+          path: frozen
+      - run: python -m diagnose5g.evaluate --input inputs --models frozen --output results
+      - run: cat results/REPORT.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: diagnostic-evaluation
+          path: results/
+          retention-days: 90
+  native:
+    needs: prepare
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    strategy:
+      fail-fast: false
+      matrix:
+        replica: [1301,1302,1303,1304,1305,1306]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y cpio
+      - name: Two bounded mechanisms and two measured signed response paths
+        env:
+          REPLICA: ${{ matrix.replica }}
+          SOURCE_COMMIT: ${{ github.sha }}
+          FORECAST_SMOKE: '0'
+        run: bash diagnose5g/run.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: diagnostic-native-${{ matrix.replica }}
+          path: out/
+          retention-days: 90
