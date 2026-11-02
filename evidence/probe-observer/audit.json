@@ -1,0 +1,11 @@
+{
+  "unique_traces": 25920,
+  "independent_test_seeds": 60,
+  "maximum_queries": 72,
+  "primary_point_estimates_recomputed": true,
+  "artifact_zip_sha256": "9c13e64a56348cdb4affb3ee07892d23bec8dcaf9f79f3a58840546f5b94bd1f",
+  "model_test_fits": 0,
+  "scope": "Read-only independent calculation on the Actions artifact; not an independent rerun",
+  "posthoc_always_healthy_macro_f1": 0.20212765957446813,
+  "posthoc_always_healthy_fpr": 0
+}
