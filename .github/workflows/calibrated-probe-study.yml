@@ -1,0 +1,142 @@
+name: Calibrated deployment error and causal probe utility
+on:
+  push:
+    branches: [codex/calibrated-probe-study]
+    paths: ['probe_calibrated/**', '.github/workflows/calibrated-probe-study.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  OMP_NUM_THREADS: '1'
+  OPENBLAS_NUM_THREADS: '1'
+  MKL_NUM_THREADS: '1'
+jobs:
+  fit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install numpy==2.2.6 scipy==1.15.3 scikit-learn==1.6.1 joblib==1.4.2 threadpoolctl==3.6.0
+      - run: python -m unittest probe_calibrated.test_study -v
+      - run: python -m probe_calibrated.study fit --output frozen
+      - uses: actions/upload-artifact@v4
+        with:
+          name: calibrated-frozen-models
+          path: frozen/
+          retention-days: 90
+  calibration:
+    needs: fit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {start: 9001, count: 50}
+          - {start: 9051, count: 50}
+          - {start: 9101, count: 50}
+          - {start: 9151, count: 49}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install numpy==2.2.6 scipy==1.15.3 scikit-learn==1.6.1 joblib==1.4.2 threadpoolctl==3.6.0
+      - uses: actions/download-artifact@v4
+        with:
+          name: calibrated-frozen-models
+          path: frozen
+      - run: python -m probe_calibrated.study calibrate --models frozen --start ${{ matrix.start }} --count ${{ matrix.count }} --output out
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: healthy-calibration-${{ matrix.start }}
+          path: out/
+          retention-days: 90
+  freeze-thresholds:
+    needs: calibration
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install numpy==2.2.6 scipy==1.15.3 scikit-learn==1.6.1 joblib==1.4.2 threadpoolctl==3.6.0
+      - uses: actions/download-artifact@v4
+        with:
+          name: calibrated-frozen-models
+          path: frozen
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: healthy-calibration-*
+          path: inputs
+      - run: python -m probe_calibrated.study merge-calibration --models frozen --input inputs --output calibrated
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frozen-deployment-thresholds
+          path: calibrated/
+          retention-days: 90
+  test:
+    needs: freeze-thresholds
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        start: [12001,12031,12061,12091]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install numpy==2.2.6 scipy==1.15.3 scikit-learn==1.6.1 joblib==1.4.2 threadpoolctl==3.6.0
+      - uses: actions/download-artifact@v4
+        with:
+          name: calibrated-frozen-models
+          path: frozen
+      - uses: actions/download-artifact@v4
+        with:
+          name: frozen-deployment-thresholds
+          path: calibrated
+      - run: python -m probe_calibrated.study test --models frozen --thresholds calibrated --start ${{ matrix.start }} --count 30 --output out
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: calibrated-test-${{ matrix.start }}
+          path: out/
+          retention-days: 90
+  report:
+    needs: test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install numpy==2.2.6 scipy==1.15.3 scikit-learn==1.6.1 joblib==1.4.2 threadpoolctl==3.6.0
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: calibrated-test-*
+          path: inputs
+      - run: python -m probe_calibrated.study report --input inputs --output results
+      - run: cat results/REPORT.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: calibrated-probe-final
+          path: results/
+          retention-days: 90
