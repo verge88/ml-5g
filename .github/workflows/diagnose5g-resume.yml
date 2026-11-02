@@ -1,0 +1,98 @@
+name: Resume diagnostic pilot after rejected packet capture
+on:
+  push:
+    branches: [codex/diagnostic-observability]
+    paths: ['.github/workflows/diagnose5g-resume.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+env:
+  OMP_NUM_THREADS: '1'
+  OPENBLAS_NUM_THREADS: '1'
+  MKL_NUM_THREADS: '1'
+  SOURCE_COMMIT: 206d1c5aaf24a858516ed3a0424674e55fe97cc7
+jobs:
+  native-retry:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 206d1c5aaf24a858516ed3a0424674e55fe97cc7
+          persist-credentials: false
+      - run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y cpio
+      - name: Retry only the technically rejected1306 capture with identical source
+        env:
+          REPLICA: '1306'
+          FORECAST_SMOKE: '0'
+        run: bash diagnose5g/run.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: diagnostic-native-1306
+          path: out/
+          retention-days: 90
+  fit:
+    needs: native-retry
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 206d1c5aaf24a858516ed3a0424674e55fe97cc7
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt cryptography==44.0.2 h2==4.2.0
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: diagnostic-native-130[1-4]
+          run-id: 41453185623
+          github-token: ${{ github.token }}
+          path: inputs
+      - run: python -m diagnose5g.train --input inputs --output models
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: diagnostic-models
+          path: models/
+          retention-days: 90
+  evaluate:
+    needs: fit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 206d1c5aaf24a858516ed3a0424674e55fe97cc7
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt cryptography==44.0.2 h2==4.2.0
+      - uses: actions/download-artifact@v4
+        with:
+          name: diagnostic-native-1305
+          run-id: 41453185623
+          github-token: ${{ github.token }}
+          path: inputs/diagnostic-native-1305
+      - uses: actions/download-artifact@v4
+        with:
+          name: diagnostic-native-1306
+          path: inputs/diagnostic-native-1306
+      - uses: actions/download-artifact@v4
+        with:
+          name: diagnostic-models
+          path: frozen
+      - run: python -m diagnose5g.evaluate --input inputs --models frozen --output results
+      - run: cat results/REPORT.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: diagnostic-evaluation
+          path: results/
+          retention-days: 90
