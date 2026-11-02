@@ -69,10 +69,13 @@ def evaluate(trials,scores,cutoff):
         early=lead is not None and 0<lead<=PLAN['forecast_horizon_seconds']
         records.append(dict(replica=t['replica'],trial=t['name'],outcome=on is not None,onset=on,first_alert=first,
             early_detected=bool(early),premature_false_alert=bool(lead is not None and lead>PLAN['forecast_horizon_seconds']),
-            benign_false_alert=bool(first is not None and on is None),lead_seconds=lead,eligible=int(t['eligible'].sum()),rows=len(s)))
+            benign_false_alert=bool(first is not None and on is None),lead_seconds=lead,eligible=int(t['eligible'].sum()),rows=len(s),
+            eligible_monitoring_seconds=float(np.sum(np.diff(t['times'],append=t['times'][-1])[t['eligible']]))))
     positive=[r for r in records if r['outcome']];negative=[r for r in records if not r['outcome']]
     return dict(positive_trials=len(positive),early_detected=sum(r['early_detected'] for r in positive),benign_trials=len(negative),
         benign_false_alerts=sum(r['benign_false_alert'] for r in negative),premature_false_alerts=sum(r['premature_false_alert'] for r in positive),
         eligible_rows=sum(r['eligible'] for r in records),rows=sum(r['rows'] for r in records),
+        benign_eligible_monitoring_seconds=sum(r['eligible_monitoring_seconds'] for r in negative),
+        benign_alerts_per_eligible_hour=3600*sum(r['benign_false_alert'] for r in negative)/max(1e-9,sum(r['eligible_monitoring_seconds'] for r in negative)),
         mean_early_lead_including_misses=float(np.mean([r['lead_seconds'] if r['early_detected'] else 0 for r in positive])) if positive else None,
         median_correct_lead_seconds=float(np.median([r['lead_seconds'] for r in positive if r['early_detected']])) if any(r['early_detected'] for r in positive) else None,records=records)

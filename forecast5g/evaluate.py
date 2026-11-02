@@ -22,7 +22,7 @@ def run(inputs,models,out):
     (out/'results.json').write_text(json.dumps(report,indent=2));np.savez_compressed(out/'test-scores.npz',**{k:np.stack(v) for k,v in scores.items()})
     (out/'test-order.json').write_text(json.dumps([dict(replica=t['replica'],trial=t['name']) for t in trials]))
     with (out/'metrics.csv').open('w',newline='') as f:
-        names=['model','positive_trials','early_detected','benign_trials','benign_false_alerts','premature_false_alerts','eligible_rows','rows','mean_early_lead_including_misses','median_correct_lead_seconds'];w=csv.DictWriter(f,fieldnames=names);w.writeheader()
+        names=['model','positive_trials','early_detected','benign_trials','benign_false_alerts','premature_false_alerts','eligible_rows','rows','benign_eligible_monitoring_seconds','benign_alerts_per_eligible_hour','mean_early_lead_including_misses','median_correct_lead_seconds'];w=csv.DictWriter(f,fieldnames=names);w.writeheader()
         for name,r in summaries.items():w.writerow(dict(model=name,**{k:r[k] for k in names if k!='model'}))
     lines=['# Проверка прогноза ухудшения услуги 5G','',f"Первичная модель: {PLAN['primary_model']}. Статистический метод, выбранный только на калибровке: {frozen['selected_statistical']}.",'',
         '| Метод | Раннее обнаружение | Ложные тревоги на штатных эпизодах | Преждевременные тревоги | Среднее упреждение с нулями за пропуски, с |','|---|---:|---:|---:|---:|']
