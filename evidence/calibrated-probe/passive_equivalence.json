@@ -1,0 +1,1949 @@
+{
+  "scope": "Structural counterexample in the registered synthetic simulator; not a claim about all passive 5G telemetry",
+  "simulator_sha256": "a9cde44ea356911eb38d99afd24654ba8813332a96f82a61ebb1a872bbd39c11",
+  "compared_pairs": 192,
+  "simulated_trajectories": 384,
+  "development_seeds": 16,
+  "feature_names": [
+    "log_user_mean",
+    "log_user_median",
+    "log_user_q75",
+    "log_user_std",
+    "past_arrival_rate",
+    "past_completion_rate",
+    "user_completion_age",
+    "own_past_query_rate",
+    "probe_work",
+    "shared_queue",
+    "log_probe_rtt",
+    "probe_present",
+    "request_age",
+    "probe_minus_user"
+  ],
+  "all_feature_matrices_identical": true,
+  "records": [
+    {
+      "seed": 88301,
+      "load": 0.35,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 6.408678748916745
+    },
+    {
+      "seed": 88301,
+      "load": 0.35,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 6.408678748916745
+    },
+    {
+      "seed": 88301,
+      "load": 0.35,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 6.408678748916745
+    },
+    {
+      "seed": 88301,
+      "load": 0.35,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 6.408678748916745
+    },
+    {
+      "seed": 88301,
+      "load": 0.7,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 21.39070776051642
+    },
+    {
+      "seed": 88301,
+      "load": 0.7,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 21.39070776051642
+    },
+    {
+      "seed": 88301,
+      "load": 0.7,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 21.39070776051642
+    },
+    {
+      "seed": 88301,
+      "load": 0.7,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 21.39070776051642
+    },
+    {
+      "seed": 88301,
+      "load": 0.92,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 48.89116415240164
+    },
+    {
+      "seed": 88301,
+      "load": 0.92,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 48.89116415240164
+    },
+    {
+      "seed": 88301,
+      "load": 0.92,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 48.89116415240164
+    },
+    {
+      "seed": 88301,
+      "load": 0.92,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 48.89116415240164
+    },
+    {
+      "seed": 88302,
+      "load": 0.35,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 5.27104076020876
+    },
+    {
+      "seed": 88302,
+      "load": 0.35,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 5.27104076020876
+    },
+    {
+      "seed": 88302,
+      "load": 0.35,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 5.27104076020876
+    },
+    {
+      "seed": 88302,
+      "load": 0.35,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 5.27104076020876
+    },
+    {
+      "seed": 88302,
+      "load": 0.7,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 8.154610739231373
+    },
+    {
+      "seed": 88302,
+      "load": 0.7,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 8.154610739231373
+    },
+    {
+      "seed": 88302,
+      "load": 0.7,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 8.154610739231373
+    },
+    {
+      "seed": 88302,
+      "load": 0.7,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 8.154610739231373
+    },
+    {
+      "seed": 88302,
+      "load": 0.92,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 20.159966642402917
+    },
+    {
+      "seed": 88302,
+      "load": 0.92,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 20.159966642402917
+    },
+    {
+      "seed": 88302,
+      "load": 0.92,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 20.159966642402917
+    },
+    {
+      "seed": 88302,
+      "load": 0.92,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 20.159966642402917
+    },
+    {
+      "seed": 88303,
+      "load": 0.35,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 6.902816395026846
+    },
+    {
+      "seed": 88303,
+      "load": 0.35,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 6.902816395026846
+    },
+    {
+      "seed": 88303,
+      "load": 0.35,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 6.902816395026846
+    },
+    {
+      "seed": 88303,
+      "load": 0.35,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 6.902816395026846
+    },
+    {
+      "seed": 88303,
+      "load": 0.7,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 10.996918969354146
+    },
+    {
+      "seed": 88303,
+      "load": 0.7,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 10.996918969354146
+    },
+    {
+      "seed": 88303,
+      "load": 0.7,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 10.996918969354146
+    },
+    {
+      "seed": 88303,
+      "load": 0.7,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 10.996918969354146
+    },
+    {
+      "seed": 88303,
+      "load": 0.92,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 13.97412311414621
+    },
+    {
+      "seed": 88303,
+      "load": 0.92,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 13.97412311414621
+    },
+    {
+      "seed": 88303,
+      "load": 0.92,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 13.97412311414621
+    },
+    {
+      "seed": 88303,
+      "load": 0.92,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 13.97412311414621
+    },
+    {
+      "seed": 88304,
+      "load": 0.35,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 7.128145751700515
+    },
+    {
+      "seed": 88304,
+      "load": 0.35,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 7.128145751700515
+    },
+    {
+      "seed": 88304,
+      "load": 0.35,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 7.128145751700515
+    },
+    {
+      "seed": 88304,
+      "load": 0.35,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 7.128145751700515
+    },
+    {
+      "seed": 88304,
+      "load": 0.7,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 11.06990392259163
+    },
+    {
+      "seed": 88304,
+      "load": 0.7,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 11.06990392259163
+    },
+    {
+      "seed": 88304,
+      "load": 0.7,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 11.06990392259163
+    },
+    {
+      "seed": 88304,
+      "load": 0.7,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 11.06990392259163
+    },
+    {
+      "seed": 88304,
+      "load": 0.92,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 17.377904681272497
+    },
+    {
+      "seed": 88304,
+      "load": 0.92,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 17.377904681272497
+    },
+    {
+      "seed": 88304,
+      "load": 0.92,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 17.377904681272497
+    },
+    {
+      "seed": 88304,
+      "load": 0.92,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 17.377904681272497
+    },
+    {
+      "seed": 88305,
+      "load": 0.35,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 9.277147578408686
+    },
+    {
+      "seed": 88305,
+      "load": 0.35,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 9.277147578408686
+    },
+    {
+      "seed": 88305,
+      "load": 0.35,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 9.277147578408686
+    },
+    {
+      "seed": 88305,
+      "load": 0.35,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 9.277147578408686
+    },
+    {
+      "seed": 88305,
+      "load": 0.7,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 8.684246081796868
+    },
+    {
+      "seed": 88305,
+      "load": 0.7,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 8.684246081796868
+    },
+    {
+      "seed": 88305,
+      "load": 0.7,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 8.684246081796868
+    },
+    {
+      "seed": 88305,
+      "load": 0.7,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 8.684246081796868
+    },
+    {
+      "seed": 88305,
+      "load": 0.92,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 17.864234357341854
+    },
+    {
+      "seed": 88305,
+      "load": 0.92,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 17.864234357341854
+    },
+    {
+      "seed": 88305,
+      "load": 0.92,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 17.864234357341854
+    },
+    {
+      "seed": 88305,
+      "load": 0.92,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 17.864234357341854
+    },
+    {
+      "seed": 88306,
+      "load": 0.35,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 8.10478084740032
+    },
+    {
+      "seed": 88306,
+      "load": 0.35,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 8.10478084740032
+    },
+    {
+      "seed": 88306,
+      "load": 0.35,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 8.10478084740032
+    },
+    {
+      "seed": 88306,
+      "load": 0.35,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 8.10478084740032
+    },
+    {
+      "seed": 88306,
+      "load": 0.7,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 10.900380246027083
+    },
+    {
+      "seed": 88306,
+      "load": 0.7,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 10.900380246027083
+    },
+    {
+      "seed": 88306,
+      "load": 0.7,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 10.900380246027083
+    },
+    {
+      "seed": 88306,
+      "load": 0.7,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 10.900380246027083
+    },
+    {
+      "seed": 88306,
+      "load": 0.92,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 21.018965840926413
+    },
+    {
+      "seed": 88306,
+      "load": 0.92,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 21.018965840926413
+    },
+    {
+      "seed": 88306,
+      "load": 0.92,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 21.018965840926413
+    },
+    {
+      "seed": 88306,
+      "load": 0.92,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 21.018965840926413
+    },
+    {
+      "seed": 88307,
+      "load": 0.35,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 5.336942379079786
+    },
+    {
+      "seed": 88307,
+      "load": 0.35,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 5.336942379079786
+    },
+    {
+      "seed": 88307,
+      "load": 0.35,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 5.336942379079786
+    },
+    {
+      "seed": 88307,
+      "load": 0.35,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 5.336942379079786
+    },
+    {
+      "seed": 88307,
+      "load": 0.7,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 10.102333116485957
+    },
+    {
+      "seed": 88307,
+      "load": 0.7,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 10.102333116485957
+    },
+    {
+      "seed": 88307,
+      "load": 0.7,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 10.102333116485957
+    },
+    {
+      "seed": 88307,
+      "load": 0.7,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 10.102333116485957
+    },
+    {
+      "seed": 88307,
+      "load": 0.92,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 13.098594418026405
+    },
+    {
+      "seed": 88307,
+      "load": 0.92,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 13.098594418026405
+    },
+    {
+      "seed": 88307,
+      "load": 0.92,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 13.098594418026405
+    },
+    {
+      "seed": 88307,
+      "load": 0.92,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 13.098594418026405
+    },
+    {
+      "seed": 88308,
+      "load": 0.35,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 6.521016683442591
+    },
+    {
+      "seed": 88308,
+      "load": 0.35,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 6.521016683442591
+    },
+    {
+      "seed": 88308,
+      "load": 0.35,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 6.521016683442591
+    },
+    {
+      "seed": 88308,
+      "load": 0.35,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 6.521016683442591
+    },
+    {
+      "seed": 88308,
+      "load": 0.7,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 9.03206898031155
+    },
+    {
+      "seed": 88308,
+      "load": 0.7,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 9.03206898031155
+    },
+    {
+      "seed": 88308,
+      "load": 0.7,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 9.03206898031155
+    },
+    {
+      "seed": 88308,
+      "load": 0.7,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 9.03206898031155
+    },
+    {
+      "seed": 88308,
+      "load": 0.92,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 13.274438163530192
+    },
+    {
+      "seed": 88308,
+      "load": 0.92,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 13.274438163530192
+    },
+    {
+      "seed": 88308,
+      "load": 0.92,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 13.274438163530192
+    },
+    {
+      "seed": 88308,
+      "load": 0.92,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 13.274438163530192
+    },
+    {
+      "seed": 88309,
+      "load": 0.35,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 6.538257146623529
+    },
+    {
+      "seed": 88309,
+      "load": 0.35,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 6.538257146623529
+    },
+    {
+      "seed": 88309,
+      "load": 0.35,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 6.538257146623529
+    },
+    {
+      "seed": 88309,
+      "load": 0.35,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 6.538257146623529
+    },
+    {
+      "seed": 88309,
+      "load": 0.7,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 10.302884708568131
+    },
+    {
+      "seed": 88309,
+      "load": 0.7,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 10.302884708568131
+    },
+    {
+      "seed": 88309,
+      "load": 0.7,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 10.302884708568131
+    },
+    {
+      "seed": 88309,
+      "load": 0.7,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 10.302884708568131
+    },
+    {
+      "seed": 88309,
+      "load": 0.92,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 12.441289191227597
+    },
+    {
+      "seed": 88309,
+      "load": 0.92,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 12.441289191227597
+    },
+    {
+      "seed": 88309,
+      "load": 0.92,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 12.441289191227597
+    },
+    {
+      "seed": 88309,
+      "load": 0.92,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 12.441289191227597
+    },
+    {
+      "seed": 88310,
+      "load": 0.35,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 8.553875228797823
+    },
+    {
+      "seed": 88310,
+      "load": 0.35,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 8.553875228797823
+    },
+    {
+      "seed": 88310,
+      "load": 0.35,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 8.553875228797823
+    },
+    {
+      "seed": 88310,
+      "load": 0.35,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 8.553875228797823
+    },
+    {
+      "seed": 88310,
+      "load": 0.7,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 8.319652105885098
+    },
+    {
+      "seed": 88310,
+      "load": 0.7,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 8.319652105885098
+    },
+    {
+      "seed": 88310,
+      "load": 0.7,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 8.319652105885098
+    },
+    {
+      "seed": 88310,
+      "load": 0.7,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 8.319652105885098
+    },
+    {
+      "seed": 88310,
+      "load": 0.92,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 9.910046166817779
+    },
+    {
+      "seed": 88310,
+      "load": 0.92,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 9.910046166817779
+    },
+    {
+      "seed": 88310,
+      "load": 0.92,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 9.910046166817779
+    },
+    {
+      "seed": 88310,
+      "load": 0.92,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 9.910046166817779
+    },
+    {
+      "seed": 88311,
+      "load": 0.35,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 6.4818059893770155
+    },
+    {
+      "seed": 88311,
+      "load": 0.35,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 6.4818059893770155
+    },
+    {
+      "seed": 88311,
+      "load": 0.35,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 6.4818059893770155
+    },
+    {
+      "seed": 88311,
+      "load": 0.35,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 6.4818059893770155
+    },
+    {
+      "seed": 88311,
+      "load": 0.7,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 11.567533187091083
+    },
+    {
+      "seed": 88311,
+      "load": 0.7,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 11.567533187091083
+    },
+    {
+      "seed": 88311,
+      "load": 0.7,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 11.567533187091083
+    },
+    {
+      "seed": 88311,
+      "load": 0.7,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 11.567533187091083
+    },
+    {
+      "seed": 88311,
+      "load": 0.92,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 13.601249093290193
+    },
+    {
+      "seed": 88311,
+      "load": 0.92,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 13.601249093290193
+    },
+    {
+      "seed": 88311,
+      "load": 0.92,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 13.601249093290193
+    },
+    {
+      "seed": 88311,
+      "load": 0.92,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 13.601249093290193
+    },
+    {
+      "seed": 88312,
+      "load": 0.35,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 7.2033014851354835
+    },
+    {
+      "seed": 88312,
+      "load": 0.35,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 7.2033014851354835
+    },
+    {
+      "seed": 88312,
+      "load": 0.35,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 7.2033014851354835
+    },
+    {
+      "seed": 88312,
+      "load": 0.35,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 7.2033014851354835
+    },
+    {
+      "seed": 88312,
+      "load": 0.7,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 9.75138129093741
+    },
+    {
+      "seed": 88312,
+      "load": 0.7,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 9.75138129093741
+    },
+    {
+      "seed": 88312,
+      "load": 0.7,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 9.75138129093741
+    },
+    {
+      "seed": 88312,
+      "load": 0.7,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 9.75138129093741
+    },
+    {
+      "seed": 88312,
+      "load": 0.92,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 25.736031377218996
+    },
+    {
+      "seed": 88312,
+      "load": 0.92,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 25.736031377218996
+    },
+    {
+      "seed": 88312,
+      "load": 0.92,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 25.736031377218996
+    },
+    {
+      "seed": 88312,
+      "load": 0.92,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 25.736031377218996
+    },
+    {
+      "seed": 88313,
+      "load": 0.35,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 6.322687626413674
+    },
+    {
+      "seed": 88313,
+      "load": 0.35,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 6.322687626413674
+    },
+    {
+      "seed": 88313,
+      "load": 0.35,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 6.322687626413674
+    },
+    {
+      "seed": 88313,
+      "load": 0.35,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 6.322687626413674
+    },
+    {
+      "seed": 88313,
+      "load": 0.7,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 9.5599382297234
+    },
+    {
+      "seed": 88313,
+      "load": 0.7,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 9.5599382297234
+    },
+    {
+      "seed": 88313,
+      "load": 0.7,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 9.5599382297234
+    },
+    {
+      "seed": 88313,
+      "load": 0.7,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 9.5599382297234
+    },
+    {
+      "seed": 88313,
+      "load": 0.92,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 25.845369009525072
+    },
+    {
+      "seed": 88313,
+      "load": 0.92,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 25.845369009525072
+    },
+    {
+      "seed": 88313,
+      "load": 0.92,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 25.845369009525072
+    },
+    {
+      "seed": 88313,
+      "load": 0.92,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 25.845369009525072
+    },
+    {
+      "seed": 88314,
+      "load": 0.35,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 6.639175354435901
+    },
+    {
+      "seed": 88314,
+      "load": 0.35,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 6.639175354435901
+    },
+    {
+      "seed": 88314,
+      "load": 0.35,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 6.639175354435901
+    },
+    {
+      "seed": 88314,
+      "load": 0.35,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 6.639175354435901
+    },
+    {
+      "seed": 88314,
+      "load": 0.7,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 8.524098929366865
+    },
+    {
+      "seed": 88314,
+      "load": 0.7,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 8.524098929366865
+    },
+    {
+      "seed": 88314,
+      "load": 0.7,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 8.524098929366865
+    },
+    {
+      "seed": 88314,
+      "load": 0.7,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 8.524098929366865
+    },
+    {
+      "seed": 88314,
+      "load": 0.92,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 18.069363961526886
+    },
+    {
+      "seed": 88314,
+      "load": 0.92,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 18.069363961526886
+    },
+    {
+      "seed": 88314,
+      "load": 0.92,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 18.069363961526886
+    },
+    {
+      "seed": 88314,
+      "load": 0.92,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 18.069363961526886
+    },
+    {
+      "seed": 88315,
+      "load": 0.35,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 5.045265290943364
+    },
+    {
+      "seed": 88315,
+      "load": 0.35,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 5.045265290943364
+    },
+    {
+      "seed": 88315,
+      "load": 0.35,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 5.045265290943364
+    },
+    {
+      "seed": 88315,
+      "load": 0.35,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 5.045265290943364
+    },
+    {
+      "seed": 88315,
+      "load": 0.7,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 10.845016186635842
+    },
+    {
+      "seed": 88315,
+      "load": 0.7,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 10.845016186635842
+    },
+    {
+      "seed": 88315,
+      "load": 0.7,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 10.845016186635842
+    },
+    {
+      "seed": 88315,
+      "load": 0.7,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 10.845016186635842
+    },
+    {
+      "seed": 88315,
+      "load": 0.92,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 50.34700006715617
+    },
+    {
+      "seed": 88315,
+      "load": 0.92,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 50.34700006715617
+    },
+    {
+      "seed": 88315,
+      "load": 0.92,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 50.34700006715617
+    },
+    {
+      "seed": 88315,
+      "load": 0.92,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 50.34700006715617
+    },
+    {
+      "seed": 88316,
+      "load": 0.35,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 6.02097966972196
+    },
+    {
+      "seed": 88316,
+      "load": 0.35,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 6.02097966972196
+    },
+    {
+      "seed": 88316,
+      "load": 0.35,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 6.02097966972196
+    },
+    {
+      "seed": 88316,
+      "load": 0.35,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 6.02097966972196
+    },
+    {
+      "seed": 88316,
+      "load": 0.7,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 8.141502341649549
+    },
+    {
+      "seed": 88316,
+      "load": 0.7,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 8.141502341649549
+    },
+    {
+      "seed": 88316,
+      "load": 0.7,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 8.141502341649549
+    },
+    {
+      "seed": 88316,
+      "load": 0.7,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 8.141502341649549
+    },
+    {
+      "seed": 88316,
+      "load": 0.92,
+      "work": 0.15,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 15.668390610358681
+    },
+    {
+      "seed": 88316,
+      "load": 0.92,
+      "work": 0.15,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 15.668390610358681
+    },
+    {
+      "seed": 88316,
+      "load": 0.92,
+      "work": 0.6,
+      "mode": "shared",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 15.668390610358681
+    },
+    {
+      "seed": 88316,
+      "load": 0.92,
+      "work": 0.6,
+      "mode": "isolated",
+      "policy": "passive",
+      "identical_features": true,
+      "different_labels": 120,
+      "user_p95": 15.668390610358681
+    }
+  ],
+  "conditional_fact": "If mechanisms path/application have equal prior probabilities and these identical observations are the only inputs, no classifier can exceed 1/2 average per-decision identification accuracy on that pair.",
+  "explanation": "No probes are sent. Both mechanisms add the same constant to each user completion; all arrival, completion and query counters and all optional masks are then identical. Detection of a deviation and identification of its cause remain distinct tasks.",
+  "novelty": "Elementary indistinguishability argument, not a new theorem or real-network discovery."
+}

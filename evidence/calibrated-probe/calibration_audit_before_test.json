@@ -1,0 +1,12 @@
+{
+  "plan_sha256": "82e2e8637f799a2c81e4cf9c867abcf0c529c7d14854128ce36be7df47f465c8",
+  "model_sha256": "4430aba7ff263c0f306d00f3ba4a69e52d1f194a0ded6cb4a1ae41a71b33c2ed",
+  "thresholds_sha256": "73fee3d1125b4b27190100148f3cf60ba6c4cd4e69549dc15907073ed396e2b2",
+  "independent_healthy_seeds": 199,
+  "calibration_cells": 72,
+  "training_rows": 322560,
+  "exact_block_order_statistic_verified": true,
+  "test_seeds_disjoint": true,
+  "source_run": 41512395301,
+  "test_results_read": false
+}

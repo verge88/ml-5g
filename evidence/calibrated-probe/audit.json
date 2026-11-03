@@ -1,0 +1,12 @@
+{
+  "unique_diagnostic_rows": 149760,
+  "physical_simulations": 37440,
+  "independent_seeds": 120,
+  "budget_and_request_freshness_verified": true,
+  "acquisition_identical_across_detectors_and_thresholds": true,
+  "primary_point_estimates_recomputed": true,
+  "all_clopper_pearson_upper_limits_independently_verified": true,
+  "test_model_fits": 0,
+  "result_sha256": "a2f93b2e37c9ed91bf9faeb775e27695e48de59f3d711e3b29eeebb15a21ab32",
+  "scope": "Read-only audit of the same Actions artifact; not an independent replication"
+}
